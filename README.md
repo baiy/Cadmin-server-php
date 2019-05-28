@@ -37,7 +37,7 @@ $handle->router('/api/'); // api入口路由注册 请求记住此入口url
 ```php
 <?php
 // Laravel 5.8
-// 加入代码 在 `./laravel/app/Providers/RouteServiceProvider.php::map()` 方法中
+// 加入代码 在 `./app/Providers/RouteServiceProvider.php::map()` 方法中
 
 use Baiy\Admin\Adapter\Laravel\Adapter; // 加载Laravel适配器
 use Baiy\Admin\Handle;
