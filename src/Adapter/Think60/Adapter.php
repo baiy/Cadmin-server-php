@@ -1,8 +1,9 @@
 <?php
 
-namespace Baiy\Admin\Adapter\Laravel;
+namespace Baiy\Admin\Adapter\Think60;
 
-use Illuminate\Support\Facades\DB;
+use think\facade\Request;
+use think\facade\Db;
 use Exception;
 
 class Adapter extends \Baiy\Admin\Adapter\Adapter
@@ -10,59 +11,62 @@ class Adapter extends \Baiy\Admin\Adapter\Adapter
     public function input($key = "", $default = "")
     {
         if (empty($key)) {
-            return request()->all();
+            return Request::param();
         }
-        return request()->input($key, $default);
+        return Request::param($key, $default);
     }
 
     public function execute($class, $method, $input)
     {
-        $object = app()->make($class);
+        $object = app()->pull($class, [], true);
         if (!is_callable([$object, $method])) {
             throw new Exception("[{$class}::{$method}]当前方法不能被调用");
         }
-        return app()->call([$object, $method], $input);
+        return app()->invokeReflectMethod(
+            $object,
+            (new \ReflectionMethod($object, $method)),
+            $input
+        );
     }
 
     public function url(): string
     {
-        return request()->fullUrl();
+        return Request::url();
     }
 
     public function method(): string
     {
-        return request()->method();
+        return Request::method();
     }
 
     public function header(): array
     {
-        return request()->header();
+        return Request::header();
     }
 
     public function ip(): string
     {
-        return request()->ip() ?: "";
+        return Request::ip() ?: "";
     }
 
-    public function listen(\Closure $func)
+    public function listen(\Closure $func) :void
     {
-        Db::listen(function ($query) use ($func) {
+        Db::listen(function ($sql, $time, $explain, $master) use ($func) {
             if (!is_callable($func)) {
-                throw new \Exception("数据库监听设置错误");
+                throw new Exception("数据库监听设置错误");
             }
-            $func($query->sql, $query->bindings, $query->time);
+            $func($sql, [], $time);
         });
     }
 
     public function select($query, array $bindings = [])
     {
-        $lists = $this->getConnection()->select($query, $bindings);
-        return json_decode(json_encode($lists), true);
+        return $this->getConnection()->query($query, $bindings) ?: [];
     }
 
     public function update($query, array $bindings = [])
     {
-        return $this->getConnection()->update($query, $bindings);
+        return $this->getConnection()->execute($query, $bindings);
     }
 
     public function insert($table, array $data = [])
@@ -72,23 +76,21 @@ class Adapter extends \Baiy\Admin\Adapter\Adapter
 
     public function delete($query, array $bindings = [])
     {
-        $this->getConnection()->delete($query, $bindings);
+        $this->getConnection()->execute($query, $bindings);
     }
 
     protected function getConnection()
     {
-        return DbHandle::connection($this->connectionName ?: null);
+        return Db::connect($this->connectionName ?: null);
     }
 
     public function response($content)
     {
-        return response()->json($content);
+        return json($content);
     }
 
     public function router($path, $class, $method)
     {
-        \Illuminate\Support\Facades\Route::any($path, $class.'@'.$method)->middleware([
-            AllowCrossDomain::class
-        ]);
+        \think\facade\Route::any($path, $class.'@'.$method)->allowCrossDomain();
     }
 }

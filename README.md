@@ -21,7 +21,7 @@ composer require baiy/admin-service
 // thinkphp 6
 // 加入代码 `./route/app.php`
 // 
-use Baiy\Admin\Adapter\Think\Adapter; // 加载tp适配器
+use Baiy\Admin\Adapter\Think60\Adapter; // 加载tp适配器
 use Baiy\Admin\Handle;
 
 $handle = Handle::instance();
@@ -39,7 +39,7 @@ $handle->router('/api/'); // api入口路由注册 请求记住此入口url
 // Laravel 5.8
 // 加入代码 在 `./app/Providers/RouteServiceProvider.php::map()` 方法中
 
-use Baiy\Admin\Adapter\Laravel\Adapter; // 加载Laravel适配器
+use Baiy\Admin\Adapter\Laravel58\Adapter; // 加载Laravel适配器
 use Baiy\Admin\Handle;
 
 $handle = Handle::instance();
