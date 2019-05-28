@@ -11,7 +11,7 @@ composer require baiy/admin-service
 ### 默认管理员
 `admin/123456`
 
-### 对应项目
+### 对应前端项目
 <https://github.com/baiy/admin-ui>
 
 ### 项目配置
