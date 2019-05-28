@@ -77,7 +77,7 @@ class Adapter extends \Baiy\Admin\Adapter\Adapter
 
     protected function getConnection()
     {
-        return DbHandle::connection($this->connectionName ?: null);
+        return Db::connection($this->connectionName ?: null);
     }
 
     public function response($content)

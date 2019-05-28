@@ -197,6 +197,6 @@ class Controller
             'admin_user_id' => $this->user ? $this->user['id'] : 0,
         ];
 
-        file_put_contents($logFilePath, json_encode($log, JSON_UNESCAPED_UNICODE)."\n", FILE_APPEND);
+        file_put_contents($logFilePath, json_encode($log, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES)."\n", FILE_APPEND);
     }
 }
