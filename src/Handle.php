@@ -60,12 +60,12 @@ class Handle
         return $this->debug;
     }
 
-    public function addNoCheckLoginRequestIds(int $id): void
+    public function addNoCheckLoginRequestId(int $id): void
     {
         $this->noCheckLoginRequestIds[] = $id;
     }
 
-    public function addOnlyLoginRequestIds(int $id): void
+    public function addOnlyLoginRequestId(int $id): void
     {
         $this->onlyLoginRequestIds[] = $id;
     }
