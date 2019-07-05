@@ -2,7 +2,7 @@
 
 ### 安装依赖
 ```
-composer require baiy/admin-service
+composer require baiy/cadmin
 ```
 
 ### 导入数据库
@@ -12,7 +12,7 @@ composer require baiy/admin-service
 `admin/123456`
 
 ### 对应前端项目
-<https://github.com/baiy/admin-ui>
+<https://github.com/baiy/CAdmin-client>
 
 ### 项目配置
 
@@ -21,8 +21,8 @@ composer require baiy/admin-service
 // thinkphp 6
 // 加入代码 `./route/app.php`
 // 
-use Baiy\Admin\Adapter\Think60\Adapter; // 加载tp适配器
-use Baiy\Admin\Handle;
+use Baiy\Cadmin\Adapter\Think60\Adapter; // 加载tp适配器
+use Baiy\Cadmin\Handle;
 
 $handle = Handle::instance();
 $handle->setAdapter(new Adapter());
@@ -39,8 +39,8 @@ $handle->router('/api/'); // api入口路由注册 请求记住此入口url
 // Laravel 5.8
 // 加入代码 在 `./app/Providers/RouteServiceProvider.php::map()` 方法中
 
-use Baiy\Admin\Adapter\Laravel58\Adapter; // 加载Laravel适配器
-use Baiy\Admin\Handle;
+use Baiy\Cadmin\Adapter\Laravel58\Adapter; // 加载Laravel适配器
+use Baiy\Cadmin\Handle;
 
 $handle = Handle::instance();
 $handle->setAdapter(new Adapter());
