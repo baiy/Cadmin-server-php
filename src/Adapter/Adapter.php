@@ -1,10 +1,16 @@
 <?php
 
-namespace Baiy\Admin\Adapter;
+namespace Baiy\Cadmin\Adapter;
+
+use Closure;
+use PDO;
+use Medoo\Medoo;
 
 abstract class Adapter
 {
     protected $connectionName;
+    /** @var Medoo */
+    private $db = null;
 
     /**
      * 获取用户输入
@@ -37,42 +43,27 @@ abstract class Adapter
     abstract public function router($path, $class, $method);
 
     // 数据监听
-    abstract public function listen(\Closure $func);
+    abstract public function listen(Closure $func);
 
-    // 查询
-    abstract public function select($query, array $bindings = []);
-
-    // 更新
-    abstract public function update($query, array $bindings = []);
-
-    // 插入
-    abstract public function insert($table, array $data = []);
-
-    // 删除
-    abstract public function delete($query, array $bindings = []);
-
-    // 获取数据连接
-    abstract protected function getConnection();
-
-    public function selectOne($query, array $bindings = [])
-    {
-        $lists = $this->select($query, $bindings);
-        return isset($lists[0]) ? $lists[0] : [];
-    }
-
-    public function count($query, array $bindings = [])
-    {
-        $lists = $this->selectOne($query, $bindings);
-        return !empty($lists) ? $lists['total'] : 0;
-    }
+    /**
+     * 获取pdo对象
+     * @return PDO
+     */
+    abstract public function getPdo();
 
     public function setConnectionName($connectionName)
     {
         $this->connectionName = $connectionName;
     }
 
-    public function allInput(): array
+    public function db()
     {
-        return $this->input();
+        if (!$this->db) {
+            $this->db = new Medoo([
+                'database_type' => 'mysql',
+                'pdo'           => $this->getPdo()
+            ]);
+        }
+        return $this->db;
     }
 }

@@ -1,12 +1,13 @@
 <?php
 
-namespace Baiy\Admin\Adapter\Think60;
+namespace Baiy\Cadmin\Adapter\Think60;
 
 use think\facade\Request;
 use think\facade\Db;
 use Exception;
+use think\facade\Route;
 
-class Adapter extends \Baiy\Admin\Adapter\Adapter
+class Adapter extends \Baiy\Cadmin\Adapter\Adapter
 {
     public function input($key = "", $default = "")
     {
@@ -49,7 +50,7 @@ class Adapter extends \Baiy\Admin\Adapter\Adapter
         return Request::ip() ?: "";
     }
 
-    public function listen(\Closure $func) :void
+    public function listen(\Closure $func): void
     {
         Db::listen(function ($sql, $time, $explain, $master) use ($func) {
             if (!is_callable($func)) {
@@ -59,31 +60,6 @@ class Adapter extends \Baiy\Admin\Adapter\Adapter
         });
     }
 
-    public function select($query, array $bindings = [])
-    {
-        return $this->getConnection()->query($query, $bindings) ?: [];
-    }
-
-    public function update($query, array $bindings = [])
-    {
-        return $this->getConnection()->execute($query, $bindings);
-    }
-
-    public function insert($table, array $data = [])
-    {
-        return $this->getConnection()->table($table)->insert($data);
-    }
-
-    public function delete($query, array $bindings = [])
-    {
-        $this->getConnection()->execute($query, $bindings);
-    }
-
-    protected function getConnection()
-    {
-        return Db::connect($this->connectionName ?: null);
-    }
-
     public function response($content)
     {
         return json($content);
@@ -91,6 +67,11 @@ class Adapter extends \Baiy\Admin\Adapter\Adapter
 
     public function router($path, $class, $method)
     {
-        \think\facade\Route::any($path, $class.'@'.$method)->allowCrossDomain();
+        Route::any($path, $class.'@'.$method)->allowCrossDomain();
+    }
+
+    public function getPdo()
+    {
+        return Db::connect($this->connectionName ?: null)->getPdo();
     }
 }
