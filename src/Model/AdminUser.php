@@ -1,8 +1,9 @@
 <?php
 
-namespace Baiy\Admin\Model;
+namespace Baiy\Cadmin\Model;
 
-use Baiy\Admin\InstanceTrait;
+use Baiy\Cadmin\Handle;
+use Baiy\Cadmin\InstanceTrait;
 
 class AdminUser extends Base
 {
@@ -24,59 +25,77 @@ class AdminUser extends Base
 
     public function getById($id)
     {
-        return $this->adapter->selectOne("select * from ".self::table()." where `id`=? limit 1", [$id]);
+        return $this->db->get(self::table(), '*', ['id' => $id]);
     }
 
     public function getByUserName($username)
     {
-        return $this->adapter->selectOne("select * from ".self::table()." where `username`=? limit 1", [$username]);
+        return $this->db->get(self::table(), "*", ['username' => $username]);
     }
 
     public function loginUpdate(int $id)
     {
-        return $this->adapter->update(
-            "update ".self::table()." set last_login_ip = ?,last_login_time = ? where id = ?",
-            [
-                $this->adapter->ip(),
-                date("Y-m-d H:i:s"),
-                $id
-            ]
+        return $this->db->update(
+            self::table(),
+            ['last_login_ip' => Handle::instance()->getAdapter()->ip(), 'last_login_time' => date("Y-m-d H:i:s")],
+            ['id' => $id]
         );
     }
 
     public function getAll()
     {
-        return $this->adapter->select("select * from ".self::table());
+        return $this->db->select(self::table(), '*');
     }
 
     public function getUserMenu($id)
     {
-        $sql = "select * from ".AdminMenu::table()." where `id` in (
-                    select `admin_menu_id` from ".AdminMenuGroup::table()." where `admin_group_id` in (
-                        select `admin_group_id` from ".AdminUserGroup::table()." where `admin_user_id` = ?
-                    )
-                ) order by `sort` ASC,`id` ASC";
-        return $this->adapter->select($sql, [$id]);
+        return $this->db->select(
+            AdminMenu::table(), '*', [
+            'AND'   => [
+                'id' => $this->db->select(
+                    AdminMenuGroup::table(), 'admin_menu_id', [
+                        'admin_group_id' => $this->db->select(
+                            AdminUserGroup::table(), 'admin_group_id', [
+                                'admin_user_id' => $id
+                            ]
+                        )
+                    ]
+                )
+            ],
+            'ORDER' => [
+                'sort' => 'ASC',
+                'id'   => 'ASC',
+            ]
+        ]);
     }
 
     public function getUserGroup($id)
     {
-        $sql = "select * from ".AdminGroup::table()." where `id` in (
-                    select `admin_group_id` from ".AdminUserGroup::table()." where `admin_user_id` = ?
-                )";
-        return $this->adapter->select($sql, [$id]);
+        return $this->db->select(AdminGroup::table(), '*', [
+            'id' => $this->db->select(AdminUserGroup::table(), 'admin_group_id', [
+                'admin_user_id' => $id
+            ])
+        ]);
     }
 
     public function checkRequestAccess($user, $request): bool
     {
-        $sql = "select count(*) as total from ".AdminUserGroup::table()." where `admin_user_id` = ? ".
-            " AND `admin_group_id` in (select `admin_group_id` from ".AdminRequestGroup::table()." where `admin_request_id` = ?)";
-        return $this->adapter->count($sql, [$user['id'], $request['id']]) != 0;
+        $count = $this->db->count(AdminUserGroup::table(), [
+            'AND' => [
+                'admin_user_id'  => $user['id'],
+                'admin_group_id' => $this->db->select(
+                    AdminRequestGroup::table(), 'admin_group_id', [
+                        'admin_request_id' => $request['id']
+                    ]
+                )
+            ]
+        ]);
+        return $count != 0;
     }
 
     public function delete($id)
     {
-        $this->adapter->delete("delete from ".self::table()." where `id` = ?", [$id]);
-        $this->adapter->delete("delete from ".AdminUserGroup::table()." where `admin_user_id` = ?", [$id]);
+        $this->db->delete(self::table(), ['id' => $id]);
+        $this->db->delete(AdminUserGroup::table(), ['admin_user_id' => $id]);
     }
 }

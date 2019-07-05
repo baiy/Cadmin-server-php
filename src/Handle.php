@@ -1,8 +1,8 @@
 <?php
 
-namespace Baiy\Admin;
+namespace Baiy\Cadmin;
 
-use Baiy\Admin\Adapter\Adapter;
+use Baiy\Cadmin\Adapter\Adapter;
 
 class Handle
 {

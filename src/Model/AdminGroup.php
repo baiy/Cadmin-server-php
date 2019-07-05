@@ -1,8 +1,8 @@
 <?php
 
-namespace Baiy\Admin\Model;
+namespace Baiy\Cadmin\Model;
 
-use Baiy\Admin\InstanceTrait;
+use Baiy\Cadmin\InstanceTrait;
 
 class AdminGroup extends Base
 {
@@ -11,9 +11,9 @@ class AdminGroup extends Base
 
     public function delete($id)
     {
-        $this->adapter->delete("delete from ".self::table()." where `id` = ?", [$id]);
-        $this->adapter->delete("delete from ".AdminUserGroup::table()." where `admin_group_id` = ?", [$id]);
-        $this->adapter->delete("delete from ".AdminMenuGroup::table()." where `admin_group_id` = ?", [$id]);
-        $this->adapter->delete("delete from ".AdminRequestGroup::table()." where `admin_group_id` = ?", [$id]);
+        $this->db->delete(self::table(), ['id' => $id]);
+        $this->db->delete(AdminUserGroup::table(), ['admin_group_id' => $id]);
+        $this->db->delete(AdminMenuGroup::table(), ['admin_group_id' => $id]);
+        $this->db->delete(AdminRequestGroup::table(), ['admin_group_id' => $id]);
     }
 }

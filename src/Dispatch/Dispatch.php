@@ -1,8 +1,8 @@
 <?php
 
-namespace Baiy\Admin\Dispatch;
+namespace Baiy\Cadmin\Dispatch;
 
-use Baiy\Admin\Adapter\Adapter;
+use Baiy\Cadmin\Adapter\Adapter;
 
 interface Dispatch
 {

@@ -1,8 +1,8 @@
 <?php
 
-namespace Baiy\Admin\Model;
+namespace Baiy\Cadmin\Model;
 
-use Baiy\Admin\InstanceTrait;
+use Baiy\Cadmin\InstanceTrait;
 
 class AdminUserGroup extends Base
 {
@@ -11,9 +11,8 @@ class AdminUserGroup extends Base
 
     public function getUids($id)
     {
-        return array_column(
-            $this->adapter->select("select `admin_user_id` from ".self::table()." where `admin_group_id`=?", [$id]),
-            'admin_user_id'
-        );
+        return $this->db->select(self::table(), 'admin_user_id', [
+            'admin_group_id' => $id
+        ]);
     }
 }

@@ -1,6 +1,6 @@
 <?php
 
-namespace Baiy\Admin\Adapter\Laravel58;
+namespace Baiy\Cadmin\Adapter\Laravel58;
 
 use Closure;
 

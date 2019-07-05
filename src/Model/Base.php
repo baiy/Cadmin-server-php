@@ -1,15 +1,17 @@
 <?php
 
-namespace Baiy\Admin\Model;
+namespace Baiy\Cadmin\Model;
 
-use Baiy\Admin\Handle;
+use Baiy\Cadmin\Handle;
+use Medoo\Medoo;
 
 abstract class Base
 {
-    public $adapter;
+    /** @var Medoo */
+    public $db;
 
     public function __construct()
     {
-        $this->adapter = Handle::instance()->getAdapter();
+        $this->db = Handle::instance()->getAdapter()->db();
     }
 }

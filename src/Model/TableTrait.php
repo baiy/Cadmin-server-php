@@ -1,6 +1,8 @@
 <?php
 
-namespace Baiy\Admin\Model;
+namespace Baiy\Cadmin\Model;
+
+use Baiy\Cadmin\Helper;
 
 trait TableTrait
 {
@@ -13,8 +15,7 @@ trait TableTrait
     public static function table()
     {
         if (!static::$table) {
-            $name = basename(str_replace('\\', '/', static::class));
-            static::$table = strtolower(trim(preg_replace("/[A-Z]/", "_\\0", $name), "_"));
+            static::$table = Helper::parseTableName(static::class);
         }
         return static::$table;
     }

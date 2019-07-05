@@ -1,9 +1,9 @@
 <?php
 
-namespace Baiy\Admin\System;
+namespace Baiy\Cadmin\System;
 
-use Baiy\Admin\Helper;
-use Baiy\Admin\Model\AdminUser;
+use Baiy\Cadmin\Helper;
+use Baiy\Cadmin\Model\AdminUser;
 use Exception;
 
 class User extends Base
@@ -11,13 +11,11 @@ class User extends Base
     public function lists($keyword = "")
     {
         $where = [];
-        $bindings = [];
         if (!empty($keyword)) {
-            $where[]= " `username` like ? ";
-            $bindings[] = "%{$keyword}%";
+            $where['username[~]'] = $keyword;
         }
 
-        list($lists, $total) = $this->page(AdminUser::table(), $where, $bindings, 'id DESC');
+        list($lists, $total) = $this->page(AdminUser::table(), $where, ['id' => 'DESC']);
 
         return [
             'lists' => array_map(function ($user) {
@@ -44,22 +42,25 @@ class User extends Base
         }
 
         if ($id) {
-            $this->adapter->update(
-                "update ".AdminUser::table()." set username = ?,status = ? where id = ?",
-                [$username, $status, $id]
+            $this->db->update(
+                AdminUser::table(),
+                compact('username', 'status'),
+                compact('id')
             );
             if (!empty($password)) {
-                $this->adapter->update(
-                    "update ".AdminUser::table()." set password = ? where id = ?",
-                    [Helper::createPassword($password), $id]
+                $this->db->update(
+                    AdminUser::table(),
+                    ['password' => Helper::createPassword($password)],
+                    compact('id')
                 );
             }
         } else {
-            $id = $this->adapter->insert(AdminUser::table(), [
+            $this->db->insert(AdminUser::table(), [
                 'username' => $username,
                 'status'   => $status,
                 'password' => Helper::createPassword($password),
             ]);
+            $id = $this->db->id();
         }
         return $id;
     }

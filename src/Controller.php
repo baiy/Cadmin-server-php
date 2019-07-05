@@ -1,11 +1,11 @@
 <?php
 
-namespace Baiy\Admin;
+namespace Baiy\Cadmin;
 
-use Baiy\Admin\Adapter\Adapter;
-use Baiy\Admin\Model\AdminRequest;
-use Baiy\Admin\Model\AdminToken;
-use Baiy\Admin\Model\AdminUser;
+use Baiy\Cadmin\Adapter\Adapter;
+use Baiy\Cadmin\Model\AdminRequest;
+use Baiy\Cadmin\Model\AdminToken;
+use Baiy\Cadmin\Model\AdminUser;
 use Exception;
 use Throwable;
 
@@ -178,7 +178,7 @@ class Controller
             return;
         }
 
-        $input = $this->adapter->allInput();
+        $input = $this->adapter->input();
         // 移除敏感信息
         unset($input['password']);
 

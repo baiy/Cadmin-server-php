@@ -1,10 +1,10 @@
 <?php
 
-namespace Baiy\Admin\Model;
+namespace Baiy\Cadmin\Model;
 
-use Baiy\Admin\Dispatch\Dispatch;
-use Baiy\Admin\Dispatch\Local;
-use Baiy\Admin\InstanceTrait;
+use Baiy\Cadmin\Dispatch\Dispatch;
+use Baiy\Cadmin\Dispatch\Local;
+use Baiy\Cadmin\InstanceTrait;
 
 class AdminRequest extends Base
 {
@@ -30,12 +30,12 @@ class AdminRequest extends Base
 
     public function getByAction($action)
     {
-        return $this->adapter->selectOne("select * from ".self::table()." where `action`=? limit 1", [$action]);
+        return $this->db->get(self::table(), '*', ['action' => $action]);
     }
 
     public function delete($id)
     {
-        $this->adapter->delete("delete from ".self::table()." where `id` = ?", [$id]);
-        $this->adapter->delete("delete from ".AdminRequestGroup::table()." where `admin_request_id` = ?", [$id]);
+        $this->db->delete(self::table(), ['id' => $id]);
+        $this->db->delete(AdminRequestGroup::table(), ['admin_request_id' => $id]);
     }
 }

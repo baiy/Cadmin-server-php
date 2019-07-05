@@ -1,8 +1,8 @@
 <?php
 
-namespace Baiy\Admin\Model;
+namespace Baiy\Cadmin\Model;
 
-use Baiy\Admin\InstanceTrait;
+use Baiy\Cadmin\InstanceTrait;
 
 class AdminRequestGroup extends Base
 {
@@ -11,11 +11,9 @@ class AdminRequestGroup extends Base
 
     public function getGroups($id)
     {
-        return $this->adapter->select(
-            "select * from ".AdminGroup::table()." where  id in(
-                select `admin_group_id` from ".self::table()." where `admin_request_id`=?
-            )",
-            [$id]
+        return $this->db->select(AdminGroup::table(), '*', [
+                'id' => $this->db->select(self::table(), 'admin_group_id', ['admin_request_id' => $id])
+            ]
         );
     }
 }

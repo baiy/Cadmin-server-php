@@ -1,6 +1,6 @@
 <?php
 
-namespace Baiy\Admin;
+namespace Baiy\Cadmin;
 
 trait InstanceTrait
 {

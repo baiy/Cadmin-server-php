@@ -1,21 +1,25 @@
 <?php
 
-namespace Baiy\Admin\System;
+namespace Baiy\Cadmin\System;
 
-use Baiy\Admin\Model\AdminMenu;
+use Baiy\Cadmin\Model\AdminMenu;
 use Exception;
 
 class Menu extends Base
 {
     public function lists()
     {
-        return $this->adapter->select("select * from ".AdminMenu::table()." order by `sort` ASC,`id` ASC");
+        return AdminMenu::instance()->getAllSorted();
     }
 
     public function sort($menus)
     {
         foreach ($menus as $menu) {
-            $this->adapter->delete("update ".AdminMenu::table()." set `sort`=? where id=?", [$menu['sort'], $menu['id']]);
+            $this->db->update(
+                AdminMenu::table(),
+                ['sort' => $menu['sort']],
+                ['id' => $menu['id']]
+            );
         }
         return true;
     }
@@ -36,18 +40,23 @@ class Menu extends Base
             }
         }
         if ($id) {
-            $this->adapter->update(
-                "update ".AdminMenu::table()." set `name` =?,`parent_id,` =?,`url` =?,`icon`=?,`description`=? where id = ?",
-                [$name, $parent_id, $url, $icon, $description, $id]
+            $this->db->update(
+                AdminMenu::table(),
+                compact('name', 'parent_id', 'url', 'icon', 'description'),
+                compact('id')
             );
         } else {
             // 计算排序值
-            $temp = $this->adapter->selectOne(
-                "select `sort` from ".AdminMenu::table()." where `parent_id`=? order `sort` DESC limit 1",
-                [$parent_id]
+            $sort = $this->db->get(
+                AdminMenu::table(),
+                'sort',
+                [
+                    'AND'   => ['parent_id' => $parent_id],
+                    'ORDER' => ['sort' => 'DESC']
+                ]
             );
-            $sort = empty($temp) ? 0 : $temp['sort'] + 1;
-            $this->adapter->insert(AdminMenu::table(), compact('name', 'parent_id', 'url', 'icon', 'description', 'sort'));
+            $sort = $sort ? 0 : $sort + 1;
+            $this->db->insert(AdminMenu::table(), compact('name', 'parent_id', 'url', 'icon', 'description', 'sort'));
         }
     }
 

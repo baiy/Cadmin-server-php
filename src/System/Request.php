@@ -1,10 +1,10 @@
 <?php
 
-namespace Baiy\Admin\System;
+namespace Baiy\Cadmin\System;
 
-use Baiy\Admin\Model\AdminRequest;
-use Baiy\Admin\Model\AdminRequestGroup;
-use Baiy\Admin\Model\AdminUserGroup;
+use Baiy\Cadmin\Model\AdminRequest;
+use Baiy\Cadmin\Model\AdminRequestGroup;
+use Baiy\Cadmin\Model\AdminUserGroup;
 use Exception;
 
 class Request extends Base
@@ -12,18 +12,14 @@ class Request extends Base
     public function lists($keyword = "", $type = "")
     {
         $where = [];
-        $bindings = [];
         if (!empty($keyword)) {
-            $where[] = "(`name` like ? or `action` like ? or `call` like ?)";
-            array_push($bindings, "%{$keyword}%", "%{$keyword}%", "%{$keyword}%");
-
+            $where['OR'] = ['name' => $keyword, 'action' => $keyword, 'call' => $keyword];
         }
         if (!empty($type)) {
-            $where[] = "(`type` = ?)";
-            array_push($bindings, $type);
+            $where['type'] = $type;
         }
 
-        list($lists, $total) = $this->page(AdminRequest::table(), $where, $bindings, 'id DESC');
+        list($lists, $total) = $this->page(AdminRequest::table(), $where, ['id' => 'DESC']);
 
         return [
             'lists' => array_map(function ($request) {
@@ -47,12 +43,14 @@ class Request extends Base
         }
 
         if ($id) {
-            $this->adapter->update(
-                "update ".AdminRequest::table()." set `name` =?,`action` =?,`type` =?,`call`=? where id = ?",
-                [$name, $action, $type, $call, $id]
+            $this->db->update(
+                AdminRequest::table(),
+                compact('name', 'action', 'type', 'call'),
+                compact('id')
             );
         } else {
-            $id = $this->adapter->insert(AdminRequest::table(), compact('name', 'action', 'type', 'call'));
+            $this->db->insert(AdminRequest::table(), compact('name', 'action', 'type', 'call'));
+            $id = $this->db->id();
         }
         return $id;
     }

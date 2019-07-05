@@ -1,8 +1,8 @@
 <?php
 
-namespace Baiy\Admin\Model;
+namespace Baiy\Cadmin\Model;
 
-use Baiy\Admin\InstanceTrait;
+use Baiy\Cadmin\InstanceTrait;
 
 class AdminMenu extends Base
 {
@@ -11,12 +11,17 @@ class AdminMenu extends Base
 
     public function getById($id)
     {
-        return $this->adapter->selectOne("select * from ".self::table()." where id=? limit 1", [$id]);
+        return $this->db->get(self::table(), "*", ['id' => $id]);
+    }
+
+    public function getAllSorted()
+    {
+        return $this->db->select(self::table(), '*', ['ORDER' => ['sort' => 'ASC', 'id' => 'ASC']]);
     }
 
     public function delete($id)
     {
-        $this->adapter->delete("delete from ".self::table()." where `id` = ?", [$id]);
-        $this->adapter->delete("delete from ".AdminMenuGroup::table()." where `admin_menu_id` = ?", [$id]);
+        $this->db->delete(self::table(), ['id' => $id]);
+        $this->db->delete(AdminMenuGroup::table(), ['admin_menu_id' => $id]);
     }
 }

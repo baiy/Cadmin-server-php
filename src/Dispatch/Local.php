@@ -1,8 +1,8 @@
 <?php
 
-namespace Baiy\Admin\Dispatch;
+namespace Baiy\Cadmin\Dispatch;
 
-use Baiy\Admin\Adapter\Adapter;
+use Baiy\Cadmin\Adapter\Adapter;
 use Exception;
 
 class Local implements Dispatch
@@ -32,7 +32,7 @@ class Local implements Dispatch
         if (!method_exists($class, $method)) {
             throw new Exception("无法定位到处理方法[".$class."::".$method."]");
         }
-        $input = $adapter->allInput();
+        $input = $adapter->input();
         $input['adminUserId'] = $this->userId;
         return $adapter->execute(
             $class, $method,$input

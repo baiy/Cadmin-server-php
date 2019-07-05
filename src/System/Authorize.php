@@ -1,15 +1,15 @@
 <?php
 
-namespace Baiy\Admin\System;
+namespace Baiy\Cadmin\System;
 
-use Baiy\Admin\Handle;
-use Baiy\Admin\Model\AdminGroup;
-use Baiy\Admin\Model\AdminMenu;
-use Baiy\Admin\Model\AdminMenuGroup;
-use Baiy\Admin\Model\AdminRequest;
-use Baiy\Admin\Model\AdminRequestGroup;
-use Baiy\Admin\Model\AdminUser;
-use Baiy\Admin\Model\AdminUserGroup;
+use Baiy\Cadmin\Handle;
+use Baiy\Cadmin\Model\AdminGroup;
+use Baiy\Cadmin\Model\AdminMenu;
+use Baiy\Cadmin\Model\AdminMenuGroup;
+use Baiy\Cadmin\Model\AdminRequest;
+use Baiy\Cadmin\Model\AdminRequestGroup;
+use Baiy\Cadmin\Model\AdminUser;
+use Baiy\Cadmin\Model\AdminUserGroup;
 use Exception;
 
 class Authorize extends Base
@@ -17,27 +17,25 @@ class Authorize extends Base
     public function lists($keyword = "")
     {
         $where = [];
-        $bindings = [];
         if (!empty($keyword)) {
-            $where[] = " `name` like ? ";
-            $bindings[] = "%{$keyword}%";
+            $where['name[~]'] = $keyword;
         }
 
-        list($lists, $total) = $this->page(AdminGroup::table(), $where, $bindings, 'id DESC');
+        list($lists, $total) = $this->page(AdminGroup::table(), $where, ['id' => 'DESC']);
 
         return [
             'lists' => array_map(function ($group) {
-                $group['request_length'] = $this->adapter->count(
-                    "select count(*) as `total` from ".AdminRequestGroup::table()." where admin_group_id =?",
-                    [$group['id']]
+                $group['request_length'] = $this->db->count(
+                    AdminRequestGroup::table(),
+                    ['admin_group_id' => $group['id']]
                 );
-                $group['menu_length'] = $this->adapter->count(
-                    "select count(*) as `total` from ".AdminMenuGroup::table()." where admin_group_id =?",
-                    [$group['id']]
+                $group['menu_length'] = $this->db->count(
+                    AdminMenuGroup::table(),
+                    ['admin_group_id' => $group['id']]
                 );
-                $group['user_length'] = $this->adapter->count(
-                    "select count(*) as `total` from ".AdminUserGroup::table()." where admin_group_id =?",
-                    [$group['id']]
+                $group['user_length'] = $this->db->count(
+                    AdminUserGroup::table(),
+                    ['admin_group_id' => $group['id']]
                 );
                 return $group;
             }, $lists),
@@ -51,9 +49,9 @@ class Authorize extends Base
             throw new Exception("名称不能为空");
         }
         if (empty($id)) {
-            return $this->adapter->insert(AdminGroup::table(), ['name' => $name]);
+            return $this->db->insert(AdminGroup::table(), ['name' => $name]);
         }
-        return $this->adapter->update("update ".AdminGroup::table()." set `name` = ? where id = ?", [$name, $id]);
+        return $this->db->update(AdminGroup::table(), compact('name'), compact('id'));
     }
 
     public function remove($id)
@@ -68,37 +66,41 @@ class Authorize extends Base
     public function getRequestAssign($id, $keyword = '')
     {
         $where = [];
-        $bindings = [];
         if (!empty($keyword)) {
-            $where[] = "(`name` like ? or `action` like ?)";
-            array_push($bindings, "%{$keyword}%", "%{$keyword}%");
+            $where['OR'] = [
+                'name[~]'   => $keyword,
+                'action[~]' => $keyword,
+            ];
         }
-        $where[] = "`id` not in (select admin_request_id from ".AdminRequestGroup::table()." where admin_group_id = ?)";
-        array_push($bindings, $id);
-        // 过滤无需分配的请求
-        $where[] = "`id` not in (?)";
-        array_push(
-            $bindings,
-            implode(',',array_merge(
-                Handle::instance()->getOnlyLoginRequestIds(),
-                Handle::instance()->getNoCheckLoginRequestIds()
-            ))
+        $where['id[!]'] = array_merge(
+            $this->db->select(AdminRequestGroup::table(), 'admin_request_id', ['admin_group_id' => $id]),
+            Handle::instance()->getOnlyLoginRequestIds(), // 过滤无需分配的请求
+            Handle::instance()->getNoCheckLoginRequestIds() // 过滤无需分配的请求
         );
 
-        list($noAssignRequest, $total) = $this->page(AdminRequest::table(), $where, $bindings, 'id DESC');
-        $assignRequest = $this->adapter->select(
-            "SELECT r.* FROM ".AdminRequest::table()." as r INNER JOIN ".AdminRequestGroup::table()." as g ON g.admin_request_id = r.id WHERE g.admin_group_id = ? order by g.id DESC",
-            [$id]
+        list($noAssignRequest, $total) = $this->page(AdminRequest::table(), $where, ['id' => 'DESC']);
+        $assignRequest = $this->db->select(
+            AdminRequest::table(),
+            ['[><]'.AdminRequestGroup::table() => ['id' => 'admin_request_id']],
+            [AdminRequest::table().'*'],
+            [
+                'AND'   => [
+                    AdminRequestGroup::table().'.admin_group_id' => $id
+                ],
+                'ORDER' => [
+                    AdminRequestGroup::table().'.id' => 'DESC'
+                ]
+            ]
         );
         return [
-            'lists'  => [$noAssignRequest, $assignRequest],
+            'lists' => [$noAssignRequest, $assignRequest],
             'total' => $total
         ];
     }
 
     public function assignRequest($groupId, $requestId)
     {
-        return $this->adapter->insert(AdminRequestGroup::table(), [
+        return $this->db->insert(AdminRequestGroup::table(), [
             'admin_group_id'   => $groupId,
             'admin_request_id' => $requestId,
         ]);
@@ -106,56 +108,41 @@ class Authorize extends Base
 
     public function removeRequest($groupId, $requestId)
     {
-        return $this->adapter->delete(
-            "delete from ".AdminRequestGroup::table()." where admin_group_id = ? and admin_request_id = ?",
-            [$groupId, $requestId]
+        return $this->db->delete(
+            AdminRequestGroup::table(),
+            ['admin_group_id' => $groupId, 'admin_request_id' => $requestId]
         );
     }
 
     public function getMenuAssign($id)
     {
-        $existIds = array_column(
-            $this->adapter->select(
-                "select admin_menu_id from ".AdminMenuGroup::table()." where admin_group_id =?",
-                [$id]
-            ),
-            'admin_menu_id'
-        );
+        $existIds = $this->db->select(AdminMenuGroup::table(), 'admin_menu_id', ['admin_group_id' => $id]);
         return array_map(function ($item) use ($existIds) {
             $item['checked'] = in_array($item['id'], $existIds);
             return $item;
-        }, $this->adapter->select("select * from ".AdminMenu::table()." order by `sort` ASC,`id` ASC"));
+        }, AdminMenu::instance()->getAllSorted());
     }
 
     public function assignMenu($groupId, $ids = [])
     {
         if (empty($ids)) {
             // 清空
-            return $this->adapter->delete(
-                "delete from ".AdminMenuGroup::table()." where admin_group_id = ?",
-                [$groupId]
-            );
+            return $this->db->delete(AdminMenuGroup::table(), ['admin_group_id' => $groupId]);
         }
-        $existIds = array_column(
-            $this->adapter->select(
-                "select admin_menu_id from ".AdminMenuGroup::table()." where admin_group_id =?",
-                [$groupId]
-            ),
-            'admin_menu_id'
-        );
+        $existIds = $this->db->select(AdminMenuGroup::table(), 'admin_menu_id', ['admin_group_id' => $groupId]);
         // 删除
         $delIds = array_diff($existIds, $ids);
         if (!empty($delIds)) {
-            $this->adapter->delete(
-                "delete from ".AdminMenuGroup::table()." where admin_group_id = ? and admin_menu_id in (?)",
-                [$groupId, implode(',', $delIds)]
-            );
+            $this->db->delete(AdminMenuGroup::table(), [
+                'admin_group_id' => $groupId,
+                'admin_menu_id'  => $delIds,
+            ]);
         }
         // 增加
         $addIds = array_diff($ids, $existIds);
         if (!empty($addIds)) {
             foreach ($addIds as $id) {
-                $this->adapter->insert(AdminMenuGroup::table(), [
+                $this->db->insert(AdminMenuGroup::table(), [
                     'admin_menu_id'  => $id,
                     'admin_group_id' => $groupId
                 ]);
@@ -166,49 +153,38 @@ class Authorize extends Base
 
     public function getUserAssign($id)
     {
-        $existIds = array_column(
-            $this->adapter->select(
-                "select admin_user_id from ".AdminUserGroup::table()." where admin_group_id =?",
-                [$id]
-            ),
-            'admin_user_id'
-        );
+        $existIds = $this->db->select(AdminUserGroup::table(), 'admin_user_id', ['admin_group_id' => $id]);
         return array_map(function ($item) use ($existIds) {
             unset($item['password']);
             $item['checked'] = in_array($item['id'], $existIds);
             return $item;
-        }, $this->adapter->select("select * from ".AdminUser::table()." order by `id` DESC"));
+        }, $this->db->select(AdminUser::table(), '*', ['ORDER' => ['id' => 'DESC']]));
     }
 
     public function assignUser($groupId, $ids = [])
     {
         if (empty($ids)) {
             // 清空
-            return $this->adapter->delete(
-                "delete from ".AdminUserGroup::table()." where admin_group_id = ?",
-                [$groupId]
+            return $this->db->delete(
+                AdminUserGroup::table(),
+                ['admin_group_id' => $groupId]
             );
         }
-        $existIds = array_column(
-            $this->adapter->select(
-                "select admin_user_id from ".AdminUserGroup::table()." where admin_group_id =?",
-                [$groupId]
-            ),
-            'admin_user_id'
-        );
+        $existIds = $this->db->select(AdminUserGroup::table(), 'admin_user_id', ['admin_group_id' => $groupId]);
+
         // 删除
         $delIds = array_diff($existIds, $ids);
         if (!empty($delIds)) {
-            $this->adapter->delete(
-                "delete from ".AdminUserGroup::table()." where admin_group_id = ? and admin_user_id in (?)",
-                [$groupId, implode(',', $delIds)]
+            $this->db->delete(
+                AdminUserGroup::table(),
+                ['admin_group_id' => $groupId, 'admin_user_id' => $delIds]
             );
         }
         // 增加
         $addIds = array_diff($ids, $existIds);
         if (!empty($addIds)) {
             foreach ($addIds as $id) {
-                $this->adapter->insert(AdminUserGroup::table(), [
+                $this->db->insert(AdminUserGroup::table(), [
                     'admin_user_id'  => $id,
                     'admin_group_id' => $groupId
                 ]);

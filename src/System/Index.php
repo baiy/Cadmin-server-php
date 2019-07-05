@@ -1,11 +1,11 @@
 <?php
 
-namespace Baiy\Admin\System;
+namespace Baiy\Cadmin\System;
 
-use Baiy\Admin\Handle;
-use Baiy\Admin\Helper;
-use Baiy\Admin\Model\AdminToken;
-use Baiy\Admin\Model\AdminUser;
+use Baiy\Cadmin\Handle;
+use Baiy\Cadmin\Helper;
+use Baiy\Cadmin\Model\AdminToken;
+use Baiy\Cadmin\Model\AdminUser;
 use Exception;
 
 class Index extends Base

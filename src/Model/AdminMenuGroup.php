@@ -1,8 +1,8 @@
 <?php
 
-namespace Baiy\Admin\Model;
+namespace Baiy\Cadmin\Model;
 
-use Baiy\Admin\InstanceTrait;
+use Baiy\Cadmin\InstanceTrait;
 
 class AdminMenuGroup extends Base
 {
