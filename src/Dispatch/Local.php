@@ -10,7 +10,7 @@ class Local implements Dispatch
     private $call;
     private $userId;
 
-    public function setCallInfo(string $call)
+    public function setCallInfo($call)
     {
         $this->call = $call;
     }
@@ -32,10 +32,10 @@ class Local implements Dispatch
         if (!method_exists($class, $method)) {
             throw new Exception("无法定位到处理方法[".$class."::".$method."]");
         }
-        $input = $adapter->input();
+        $input = $adapter->request->input();
         $input['adminUserId'] = $this->userId;
         return $adapter->execute(
-            $class, $method,$input
+            $class, $method, $input
         );
     }
 }

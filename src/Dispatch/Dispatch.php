@@ -6,7 +6,7 @@ use Baiy\Cadmin\Adapter\Adapter;
 
 interface Dispatch
 {
-    public function setCallInfo(string $call);
+    public function setCallInfo($call);
 
     public function setUserId($userId);
 

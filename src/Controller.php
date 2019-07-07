@@ -11,9 +11,10 @@ use Throwable;
 
 class Controller
 {
+    // 监听sql执行数据
+    public static $listenSql = [];
     private $request = [];
     private $user = [];
-    private $listenSql = [];
     /** @var Adapter */
     private $adapter;
 
@@ -31,7 +32,7 @@ class Controller
         try {
             // 数据库监听
             $this->adapter->listen(function ($sql, $bindings, $time) {
-                $this->addListenSql($sql, $bindings, $time);
+                Controller::addListenSql($sql, $bindings, $time);
             });
 
             $this->initRequest();
@@ -58,9 +59,14 @@ class Controller
         $this->logRecord($response);
 
         if (Handle::instance()->isDebug()) {
-            $response['sql'] = $this->listenSql;
+            $response['sql'] = self::$listenSql;
         }
-        return $this->adapter->response($response);
+        return $this->adapter->sendResponse($response);
+    }
+
+    public static function addListenSql($sql, $bindings, $time): void
+    {
+        self::$listenSql[] = compact('sql', 'time', 'bindings');
     }
 
     private function response($status, $info, $data)
@@ -69,22 +75,12 @@ class Controller
     }
 
     /**
-     * @param string $sql
-     * @param string $time
-     * @param array $bindings
-     */
-    private function addListenSql($sql, $bindings, $time): void
-    {
-        $this->listenSql[] = compact('sql', 'time', 'bindings');
-    }
-
-    /**
      * 初始化请求数据
      * @throws Exception
      */
     private function initRequest()
     {
-        $action = $this->adapter->input(Handle::ACTION_INPUT_NAME);
+        $action = $this->adapter->request->input(Handle::ACTION_INPUT_NAME);
         if (empty($action)) {
             throw new Exception("action参数错误");
         }
@@ -102,7 +98,7 @@ class Controller
      */
     private function initUser()
     {
-        $token = $this->adapter->input(Handle::TOKEN_INPUT_NAME);
+        $token = $this->adapter->request->input(Handle::TOKEN_INPUT_NAME);
         if (empty($token)) {
             return;
         }
@@ -146,9 +142,6 @@ class Controller
         }
     }
 
-    /**
-     * 请求调度
-     */
     private function dispatch()
     {
         $dispatch = AdminRequest::getDispatch($this->request['type']);
@@ -178,25 +171,24 @@ class Controller
             return;
         }
 
-        $input = $this->adapter->input();
+        $input = $this->adapter->request->input();
         // 移除敏感信息
         unset($input['password']);
 
         $log = [
             'time'          => date('Y-m-d H:i:s'),
-            'action'        => $this->adapter->input(Handle::ACTION_INPUT_NAME),
+            'action'        => $this->adapter->request->input(Handle::ACTION_INPUT_NAME),
             'request'       => [
-                'url'    => $this->adapter->url(),
                 'input'  => $input,
-                'method' => $this->adapter->method(),
-                'ip'     => $_SERVER['REMOTE_ADDR'],
-                'header' => $this->adapter->header(),
+                'method' => $this->adapter->request->method(),
+                'ip'     => $this->adapter->request->clientIp(),
+                'url'     => $this->adapter->request->url(),
             ],
             'response'      => $response,
-            'sql'           => $this->listenSql,
+            'sql'           => self::$listenSql,
             'admin_user_id' => $this->user ? $this->user['id'] : 0,
         ];
 
-        file_put_contents($logFilePath, json_encode($log, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES)."\n", FILE_APPEND);
+        file_put_contents($logFilePath, json_encode($log, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)."\n", FILE_APPEND);
     }
 }

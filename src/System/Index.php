@@ -38,7 +38,7 @@ class Index extends Base
 
     public function logout()
     {
-        $token = $this->adapter->input(Handle::TOKEN_INPUT_NAME);
+        $token = $this->adapter->request->input(Handle::TOKEN_INPUT_NAME);
         if (!empty($token)) {
             AdminToken::instance()->deleteToken($token);
         }

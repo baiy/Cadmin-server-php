@@ -2,21 +2,18 @@
 
 namespace Baiy\Cadmin\Adapter\Think60;
 
+use Baiy\Cadmin\Model\AdminRequest;
+use Baiy\Cadmin\Adapter\Request as AdapterRequest;
+use Closure;
+use ReflectionMethod;
 use think\facade\Request;
 use think\facade\Db;
 use Exception;
 use think\facade\Route;
+use think\Response;
 
 class Adapter extends \Baiy\Cadmin\Adapter\Adapter
 {
-    public function input($key = "", $default = "")
-    {
-        if (empty($key)) {
-            return Request::param();
-        }
-        return Request::param($key, $default);
-    }
-
     public function execute($class, $method, $input)
     {
         $object = app()->pull($class, [], true);
@@ -25,32 +22,22 @@ class Adapter extends \Baiy\Cadmin\Adapter\Adapter
         }
         return app()->invokeReflectMethod(
             $object,
-            (new \ReflectionMethod($object, $method)),
+            (new ReflectionMethod($object, $method)),
             $input
         );
     }
 
-    public function url(): string
+    public function initializeRequest(): AdapterRequest
     {
-        return Request::url();
+        $request = new AdapterRequest();
+        $request->setClientIp(Request::ip());
+        $request->setMethod(Request::method());
+        $request->setUrl(Request::url());
+        $request->setInput(Request::param());
+        return $request;
     }
 
-    public function method(): string
-    {
-        return Request::method();
-    }
-
-    public function header(): array
-    {
-        return Request::header();
-    }
-
-    public function ip(): string
-    {
-        return Request::ip() ?: "";
-    }
-
-    public function listen(\Closure $func): void
+    public function listen(Closure $func): void
     {
         Db::listen(function ($sql, $time, $explain, $master) use ($func) {
             if (!is_callable($func)) {
@@ -60,9 +47,9 @@ class Adapter extends \Baiy\Cadmin\Adapter\Adapter
         });
     }
 
-    public function response($content)
+    public function sendResponse($content)
     {
-        return json($content);
+        return Response::create($content, 'json', 200);
     }
 
     public function router($path, $class, $method)
@@ -72,6 +59,8 @@ class Adapter extends \Baiy\Cadmin\Adapter\Adapter
 
     public function getPdo()
     {
-        return Db::connect($this->connectionName ?: null)->getPdo();
+        // 临时方案: tp 需要先查询一次数据库 才能获取到pdo对象
+        Db::connect()->table(AdminRequest::table())->limit(1)->select();
+        return Db::connect($this->connection ?: null)->getConnection()->getPdo();
     }
 }

@@ -3,14 +3,13 @@
 namespace Baiy\Cadmin;
 
 use Baiy\Cadmin\Adapter\Adapter;
+use Exception;
 
 class Handle
 {
     use InstanceTrait;
-
     const ACTION_INPUT_NAME = "_action";
     const TOKEN_INPUT_NAME = "_token";
-
     // 无需登录请求ID
     private $noCheckLoginRequestIds = [1];
     // 仅需登录请求ID
@@ -19,16 +18,17 @@ class Handle
     private $debug = false;
     // 日志文件路径
     private $logFilePath = "";
-
     /** @var Adapter 框架适配器 */
     private $adapter;
 
-    private function __construct(){}
+    private function __construct()
+    {
+    }
 
     // 注册后台路由入口
     public function router($path = "/")
     {
-        $this->getAdapter()->router($path,Controller::class,'run');
+        $this->getAdapter()->router($path, Controller::class, 'run');
     }
 
     public function setAdapter(Adapter $adapter): Handle
@@ -39,13 +39,13 @@ class Handle
 
     public function setDbConnection($name)
     {
-        $this->getAdapter()->setConnectionName($name);
+        $this->getAdapter()->setConnection($name);
     }
 
     public function getAdapter(): Adapter
     {
         if (empty($this->adapter)) {
-            throw new \Exception("初始化后台服务失败");
+            throw new Exception("初始化后台服务失败");
         }
         return $this->adapter;
     }

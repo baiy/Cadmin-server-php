@@ -3,12 +3,12 @@
 namespace Baiy\Cadmin\System;
 
 use Baiy\Cadmin\Handle;
-use Medoo\Medoo;
+use Baiy\Cadmin\Db;
 
 class Base
 {
     protected $adapter;
-    /** @var Medoo */
+    /** @var Db */
     public $db;
 
     public function __construct()
@@ -20,8 +20,8 @@ class Base
     public function page($table, $where = [], $order = "")
     {
         $where = $where ? ['AND' => $where] : [];
-        $offset = max(0, intval($this->adapter->input('offset', 1)));
-        $pageSize = max(1, min(200, intval($this->adapter->input('pageSize', 20))));
+        $offset = max(0, intval($this->adapter->request->input('offset', 1)));
+        $pageSize = max(1, min(200, intval($this->adapter->request->input('pageSize', 20))));
 
         $lists = $this->db->select(
             $table, '*',

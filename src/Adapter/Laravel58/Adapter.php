@@ -2,20 +2,13 @@
 
 namespace Baiy\Cadmin\Adapter\Laravel58;
 
+use Baiy\Cadmin\Adapter\Request as AdapterRequest;
 use Illuminate\Support\Facades\DB;
 use Exception;
 use Illuminate\Support\Facades\Route;
 
 class Adapter extends \Baiy\Cadmin\Adapter\Adapter
 {
-    public function input($key = "", $default = "")
-    {
-        if (empty($key)) {
-            return request()->all();
-        }
-        return request()->input($key, $default);
-    }
-
     public function execute($class, $method, $input)
     {
         $object = app()->make($class);
@@ -25,24 +18,14 @@ class Adapter extends \Baiy\Cadmin\Adapter\Adapter
         return app()->call([$object, $method], $input);
     }
 
-    public function url(): string
+    public function initializeRequest(): AdapterRequest
     {
-        return request()->fullUrl();
-    }
-
-    public function method(): string
-    {
-        return request()->method();
-    }
-
-    public function header(): array
-    {
-        return request()->header();
-    }
-
-    public function ip(): string
-    {
-        return request()->ip() ?: "";
+        $request = new AdapterRequest();
+        $request->setClientIp(request()->ip());
+        $request->setMethod(request()->method());
+        $request->setUrl(request()->fullUrl());
+        $request->setInput(request()->all());
+        return $request;
     }
 
     public function listen(\Closure $func)
@@ -55,7 +38,7 @@ class Adapter extends \Baiy\Cadmin\Adapter\Adapter
         });
     }
 
-    public function response($content)
+    public function sendResponse($content)
     {
         return response()->json($content);
     }
@@ -69,6 +52,6 @@ class Adapter extends \Baiy\Cadmin\Adapter\Adapter
 
     public function getPdo()
     {
-        return Db::connection($this->connectionName ?: null)->getPdo();
+        return Db::connection($this->connection ?: null)->getPdo();
     }
 }

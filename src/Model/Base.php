@@ -3,11 +3,11 @@
 namespace Baiy\Cadmin\Model;
 
 use Baiy\Cadmin\Handle;
-use Medoo\Medoo;
+use Baiy\Cadmin\Db;
 
 abstract class Base
 {
-    /** @var Medoo */
+    /** @var Db */
     public $db;
 
     public function __construct()

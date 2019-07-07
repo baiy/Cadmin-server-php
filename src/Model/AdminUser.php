@@ -37,7 +37,10 @@ class AdminUser extends Base
     {
         return $this->db->update(
             self::table(),
-            ['last_login_ip' => Handle::instance()->getAdapter()->ip(), 'last_login_time' => date("Y-m-d H:i:s")],
+            [
+                'last_login_ip'   => Handle::instance()->getAdapter()->request->clientIp(),
+                'last_login_time' => date("Y-m-d H:i:s")
+            ],
             ['id' => $id]
         );
     }
