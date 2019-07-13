@@ -48,12 +48,7 @@ class Menu extends Base
         } else {
             // 计算排序值
             $sort = $this->db->get(
-                AdminMenu::table(),
-                'sort',
-                [
-                    'AND'   => ['parent_id' => $parent_id],
-                    'ORDER' => ['sort' => 'DESC']
-                ]
+                AdminMenu::table(), 'sort', ['AND' => compact('parent_id'), 'ORDER' => ['sort' => 'DESC']]
             );
             $sort = $sort ? 0 : $sort + 1;
             $this->db->insert(AdminMenu::table(), compact('name', 'parent_id', 'url', 'icon', 'description', 'sort'));

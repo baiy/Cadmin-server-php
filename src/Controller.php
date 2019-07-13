@@ -20,7 +20,6 @@ class Controller
 
     public function __construct()
     {
-        // 适配器
         $this->adapter = Handle::instance()->getAdapter();
     }
 

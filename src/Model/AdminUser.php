@@ -50,47 +50,49 @@ class AdminUser extends Base
         return $this->db->select(self::table(), '*');
     }
 
-    public function getUserMenu($id)
+    public function getUserMenu($userId)
     {
+        $groupIds = $this->db->select(AdminUserGroup::table(), 'admin_group_id', ['admin_user_id' => $userId]);
+        if (empty($groupIds)) {
+            return [];
+        }
+        $menuIds = $this->db->select(AdminMenuGroup::table(), 'admin_menu_id', ['admin_group_id' => $groupIds]);
+        if (empty($menuIds)) {
+            return [];
+        }
         return $this->db->select(
-            AdminMenu::table(), '*', [
-            'AND'   => [
-                'id' => $this->db->select(
-                    AdminMenuGroup::table(), 'admin_menu_id', [
-                        'admin_group_id' => $this->db->select(
-                            AdminUserGroup::table(), 'admin_group_id', [
-                                'admin_user_id' => $id
-                            ]
-                        )
-                    ]
-                )
-            ],
-            'ORDER' => [
-                'sort' => 'ASC',
-                'id'   => 'ASC',
+            AdminMenu::table(),
+            '*',
+            [
+                'AND'   => ['id' => $menuIds],
+                'ORDER' => ['sort' => 'ASC', 'id' => 'ASC']
             ]
-        ]);
+        );
     }
 
-    public function getUserGroup($id)
+    public function getUserGroup($userId)
     {
-        return $this->db->select(AdminGroup::table(), '*', [
-            'id' => $this->db->select(AdminUserGroup::table(), 'admin_group_id', [
-                'admin_user_id' => $id
-            ])
-        ]);
+        $groupIds = $this->db->select(AdminUserGroup::table(), 'admin_group_id', ['admin_user_id' => $userId]);
+        if (empty($groupIds)) {
+            return [];
+        }
+        return $this->db->select(AdminGroup::table(), '*', ['id' => $groupIds]);
     }
 
     public function checkRequestAccess($user, $request): bool
     {
+        $groupIds = $this->db->select(
+            AdminRequestGroup::table(),
+            'admin_group_id',
+            ['admin_request_id' => $request['id']]
+        );
+        if (empty($groupIds)) {
+            return false;
+        }
         $count = $this->db->count(AdminUserGroup::table(), [
             'AND' => [
                 'admin_user_id'  => $user['id'],
-                'admin_group_id' => $this->db->select(
-                    AdminRequestGroup::table(), 'admin_group_id', [
-                        'admin_request_id' => $request['id']
-                    ]
-                )
+                'admin_group_id' => $groupIds
             ]
         ]);
         return $count != 0;

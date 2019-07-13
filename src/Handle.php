@@ -3,23 +3,29 @@
 namespace Baiy\Cadmin;
 
 use Baiy\Cadmin\Adapter\Adapter;
+use Baiy\Cadmin\Adapter\Upload;
 use Exception;
 
 class Handle
 {
     use InstanceTrait;
     const ACTION_INPUT_NAME = "_action";
-    const TOKEN_INPUT_NAME = "_token";
-    // 无需登录请求ID
+    const TOKEN_INPUT_NAME  = "_token";
+    /** @var array 无需登录请求ID */
     private $noCheckLoginRequestIds = [1];
-    // 仅需登录请求ID
-    private $onlyLoginRequestIds = [2, 3];
-    // 系统调试标示
+    /** @var array 仅需登录请求ID */
+    private $onlyLoginRequestIds = [2, 3, 4];
+    /** @var bool 系统调试标示 */
     private $debug = false;
-    // 日志文件路径
+    /** @var string 日志文件路径 */
     private $logFilePath = "";
     /** @var Adapter 框架适配器 */
     private $adapter;
+    /** @var array 文件上传配置 */
+    private $upload = [
+        'drive'  => Upload::class,
+        'config' => []
+    ];
 
     private function __construct()
     {
@@ -88,5 +94,18 @@ class Handle
     public function getLogFilePath(): string
     {
         return $this->logFilePath;
+    }
+
+    public function getUpload(): array
+    {
+        return $this->upload;
+    }
+
+    public function setUpload($config, $drive = ""): void
+    {
+        $this->upload['config'] = array_merge($this->upload['config'], $config);
+        if ($drive) {
+            $this->upload['drive'] = $drive;
+        }
     }
 }

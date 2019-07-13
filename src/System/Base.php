@@ -7,21 +7,19 @@ use Baiy\Cadmin\Db;
 
 class Base
 {
-    protected $adapter;
     /** @var Db */
     public $db;
 
     public function __construct()
     {
-        $this->adapter = Handle::instance()->getAdapter();
-        $this->db = $this->adapter->db();
+        $this->db = Handle::instance()->getAdapter()->db();
     }
 
     public function page($table, $where = [], $order = "")
     {
         $where = $where ? ['AND' => $where] : [];
-        $offset = max(0, intval($this->adapter->request->input('offset', 1)));
-        $pageSize = max(1, min(200, intval($this->adapter->request->input('pageSize', 20))));
+        $offset = max(0, intval(Handle::instance()->getAdapter()->request->input('offset', 0)));
+        $pageSize = max(1, min(200, intval(Handle::instance()->getAdapter()->request->input('pageSize', 20))));
 
         $lists = $this->db->select(
             $table, '*',

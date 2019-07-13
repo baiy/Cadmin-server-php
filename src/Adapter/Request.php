@@ -4,14 +4,16 @@ namespace Baiy\Cadmin\Adapter;
 
 class Request
 {
-    // 客户端ip
+    /** @var string 客户端ip */
     private $clientIp = "";
-    // 请求方法
+    /** @var string 请求方法 */
     private $method = "";
-    // 请求url
+    /** @var string 请求url */
     private $url = "";
-    // 请求数据
+    /** @var array 请求数据 */
     private $input = [];
+    /** @var array $files $_FILES */
+    private $files;
 
     /**
      * @return string
@@ -75,5 +77,15 @@ class Request
     public function setInput(array $input): void
     {
         $this->input = $input;
+    }
+
+    public function setFiles(array $files): void
+    {
+        $this->files = $files;
+    }
+
+    public function file($key)
+    {
+        return isset($this->files[$key]) ? $this->files[$key] : [];
     }
 }

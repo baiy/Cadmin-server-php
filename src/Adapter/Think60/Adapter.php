@@ -34,6 +34,7 @@ class Adapter extends \Baiy\Cadmin\Adapter\Adapter
         $request->setMethod(Request::method());
         $request->setUrl(Request::url());
         $request->setInput(Request::param());
+        $request->setFiles($_FILES ?? []);
         return $request;
     }
 

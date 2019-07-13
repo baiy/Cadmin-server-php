@@ -3,6 +3,7 @@
 namespace Baiy\Cadmin\Adapter\Laravel58;
 
 use Baiy\Cadmin\Adapter\Request as AdapterRequest;
+use Closure;
 use Illuminate\Support\Facades\DB;
 use Exception;
 use Illuminate\Support\Facades\Route;
@@ -25,14 +26,15 @@ class Adapter extends \Baiy\Cadmin\Adapter\Adapter
         $request->setMethod(request()->method());
         $request->setUrl(request()->fullUrl());
         $request->setInput(request()->all());
+        $request->setFiles($_FILES);
         return $request;
     }
 
-    public function listen(\Closure $func)
+    public function listen(Closure $func)
     {
         Db::listen(function ($query) use ($func) {
             if (!is_callable($func)) {
-                throw new \Exception("数据库监听设置错误");
+                throw new Exception("数据库监听设置错误");
             }
             $func($query->sql, $query->bindings, $query->time);
         });

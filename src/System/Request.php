@@ -13,7 +13,7 @@ class Request extends Base
     {
         $where = [];
         if (!empty($keyword)) {
-            $where['OR'] = ['name' => $keyword, 'action' => $keyword, 'call' => $keyword];
+            $where['OR'] = ['name[~]' => $keyword, 'action[~]' => $keyword, 'call[~]' => $keyword];
         }
         if (!empty($type)) {
             $where['type'] = $type;
