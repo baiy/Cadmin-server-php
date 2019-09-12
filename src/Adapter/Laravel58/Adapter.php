@@ -2,7 +2,6 @@
 
 namespace Baiy\Cadmin\Adapter\Laravel58;
 
-use Baiy\Cadmin\Adapter\Request as AdapterRequest;
 use Closure;
 use Illuminate\Support\Facades\DB;
 use Exception;
@@ -17,17 +16,6 @@ class Adapter extends \Baiy\Cadmin\Adapter\Adapter
             throw new Exception("[{$class}::{$method}]当前方法不能被调用");
         }
         return app()->call([$object, $method], $input);
-    }
-
-    public function initializeRequest(): AdapterRequest
-    {
-        $request = new AdapterRequest();
-        $request->setClientIp(request()->ip());
-        $request->setMethod(request()->method());
-        $request->setUrl(request()->fullUrl());
-        $request->setInput(request()->all());
-        $request->setFiles($_FILES);
-        return $request;
     }
 
     public function listen(Closure $func)

@@ -8,12 +8,10 @@ class Request
     private $clientIp = "";
     /** @var string 请求方法 */
     private $method = "";
-    /** @var string 请求url */
+    /** @var string 请求完整url */
     private $url = "";
-    /** @var array 请求数据 */
+    /** @var array 请求数据  */
     private $input = [];
-    /** @var array $files $_FILES */
-    private $files;
 
     /**
      * @return string
@@ -77,15 +75,5 @@ class Request
     public function setInput(array $input): void
     {
         $this->input = $input;
-    }
-
-    public function setFiles(array $files): void
-    {
-        $this->files = $files;
-    }
-
-    public function file($key)
-    {
-        return isset($this->files[$key]) ? $this->files[$key] : [];
     }
 }

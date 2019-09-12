@@ -3,10 +3,8 @@
 namespace Baiy\Cadmin\Adapter\Think60;
 
 use Baiy\Cadmin\Model\AdminRequest;
-use Baiy\Cadmin\Adapter\Request as AdapterRequest;
 use Closure;
 use ReflectionMethod;
-use think\facade\Request;
 use think\facade\Db;
 use Exception;
 use think\facade\Route;
@@ -27,20 +25,9 @@ class Adapter extends \Baiy\Cadmin\Adapter\Adapter
         );
     }
 
-    public function initializeRequest(): AdapterRequest
-    {
-        $request = new AdapterRequest();
-        $request->setClientIp(Request::ip());
-        $request->setMethod(Request::method());
-        $request->setUrl(Request::url());
-        $request->setInput(Request::param());
-        $request->setFiles($_FILES ?? []);
-        return $request;
-    }
-
     public function listen(Closure $func): void
     {
-        Db::listen(function ($sql, $time, $explain, $master) use ($func) {
+        Db::listen(function ($sql, $time, $master) use ($func) {
             if (!is_callable($func)) {
                 throw new Exception("数据库监听设置错误");
             }
