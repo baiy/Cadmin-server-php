@@ -3,7 +3,6 @@
 namespace Baiy\Cadmin;
 
 use Baiy\Cadmin\Adapter\Adapter;
-use Baiy\Cadmin\Adapter\Upload;
 use Exception;
 
 class Handle
@@ -14,7 +13,7 @@ class Handle
     /** @var array 无需登录请求ID */
     private $noCheckLoginRequestIds = [1];
     /** @var array 仅需登录请求ID */
-    private $onlyLoginRequestIds = [2, 3, 4];
+    private $onlyLoginRequestIds = [2, 3];
     /** @var bool 系统调试标示 */
     private $debug = false;
     /** @var string 日志文件路径 */
