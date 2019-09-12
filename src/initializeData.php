@@ -7,7 +7,6 @@ use Baiy\Cadmin\Model\AdminMenu;
 use Baiy\Cadmin\Model\AdminMenuGroup;
 use Baiy\Cadmin\Model\AdminRequest;
 use Baiy\Cadmin\Model\AdminRequestGroup;
-//use Baiy\Cadmin\Model\AdminToken;
 use Baiy\Cadmin\Model\AdminUser;
 use Baiy\Cadmin\Model\AdminUserGroup;
 
@@ -26,7 +25,6 @@ $requests = [
     ['id' => 1, 'type' => 1, 'name' => '登录', 'action' => '/login', 'call' => 'System\\Index::login'],
     ['id' => 2, 'type' => 1, 'name' => '退出', 'action' => '/logout', 'call' => 'System\\Index::logout'],
     ['id' => 3, 'type' => 1, 'name' => '初始数据加载', 'action' => '/load', 'call' => 'System\\Index::load'],
-    ['id' => 4, 'type' => 1, 'name' => '通用文件上传', 'action' => '/upload', 'call' => 'System\\Index::upload'],
     ['id' => 100, 'type' => 1, 'name' => '菜单管理-列表数据', 'action' => '/system/menu/lists', 'call' => 'System\\Menu::lists'],
     ['id' => 101, 'type' => 1, 'name' => '菜单管理-排序', 'action' => '/system/menu/sort', 'call' => 'System\\Menu::sort'],
     ['id' => 102, 'type' => 1, 'name' => '菜单管理-菜单保存', 'action' => '/system/menu/save', 'call' => 'System\\Menu::save'],
@@ -51,7 +49,7 @@ $requests = [
 ];
 
 // 无分组请求
-$noneGroupRequest = [1, 2, 3, 4];
+$noneGroupRequest = [1, 2, 3];
 
 return [
     AdminGroup::table()        => [

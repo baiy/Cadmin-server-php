@@ -21,11 +21,6 @@ class Handle
     private $logFilePath = "";
     /** @var Adapter 框架适配器 */
     private $adapter;
-    /** @var array 文件上传配置 */
-    private $upload = [
-        'drive'  => Upload::class,
-        'config' => []
-    ];
 
     private function __construct()
     {
@@ -94,18 +89,5 @@ class Handle
     public function getLogFilePath(): string
     {
         return $this->logFilePath;
-    }
-
-    public function getUpload(): array
-    {
-        return $this->upload;
-    }
-
-    public function setUpload($config, $drive = ""): void
-    {
-        $this->upload['config'] = array_merge($this->upload['config'], $config);
-        if ($drive) {
-            $this->upload['drive'] = $drive;
-        }
     }
 }
