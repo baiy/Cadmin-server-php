@@ -3,6 +3,7 @@
 namespace Baiy\Cadmin;
 
 use Baiy\Cadmin\Adapter\Adapter;
+use Closure;
 use Exception;
 
 class Handle
@@ -16,8 +17,8 @@ class Handle
     private $onlyLoginRequestIds = [2, 3];
     /** @var bool 系统调试标示 */
     private $debug = false;
-    /** @var string 日志文件路径 */
-    private $logFilePath = "";
+    /** @var Closure 日志记录回调函数 */
+    private $logCallback = null;
     /** @var Adapter 框架适配器 */
     private $adapter;
 
@@ -80,13 +81,16 @@ class Handle
         return $this->onlyLoginRequestIds;
     }
 
-    public function setLogFilePath(string $logFilePath): void
+    public function setLogCallback(Closure $callback): void
     {
-        $this->logFilePath = $logFilePath;
+        $this->logCallback = $callback;
     }
 
-    public function getLogFilePath(): string
+    public function log(array $content)
     {
-        return $this->logFilePath;
+        if ($this->logCallback instanceof Closure) {
+            $callback = $this->logCallback;
+            $callback($content);
+        }
     }
 }

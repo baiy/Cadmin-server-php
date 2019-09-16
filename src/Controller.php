@@ -165,11 +165,6 @@ class Controller
 
     private function logRecord($response)
     {
-        $logFilePath = Handle::instance()->getLogFilePath();
-        if (empty($logFilePath)) {
-            return;
-        }
-
         $input = $this->adapter->request->input();
         // 移除敏感信息
         unset($input['password']);
@@ -181,13 +176,12 @@ class Controller
                 'input'  => $input,
                 'method' => $this->adapter->request->method(),
                 'ip'     => $this->adapter->request->clientIp(),
-                'url'     => $this->adapter->request->url(),
+                'url'    => $this->adapter->request->url(),
             ],
             'response'      => $response,
             'sql'           => self::$listenSql,
             'admin_user_id' => $this->user ? $this->user['id'] : 0,
         ];
-
-        file_put_contents($logFilePath, json_encode($log, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)."\n", FILE_APPEND);
+        Handle::instance()->log($log);
     }
 }
