@@ -9,12 +9,7 @@ class AdminMenu extends Base
     use InstanceTrait;
     use TableTrait;
 
-    public function getById($id)
-    {
-        return $this->db->get(self::table(), "*", ['id' => $id]);
-    }
-
-    public function getAllSorted()
+    public function all()
     {
         return $this->db->select(self::table(), '*', ['ORDER' => ['sort' => 'ASC', 'id' => 'ASC']]);
     }
@@ -22,6 +17,6 @@ class AdminMenu extends Base
     public function delete($id)
     {
         $this->db->delete(self::table(), ['id' => $id]);
-        $this->db->delete(AdminMenuGroup::table(), ['admin_menu_id' => $id]);
+        $this->db->delete(AdminMenuRelate::table(), ['admin_menu_id' => $id]);
     }
 }

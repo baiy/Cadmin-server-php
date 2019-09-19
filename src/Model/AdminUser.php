@@ -52,55 +52,50 @@ class AdminUser extends Base
 
     public function getUserMenu($userId)
     {
-        $groupIds = $this->db->select(AdminUserGroup::table(), 'admin_group_id', ['admin_user_id' => $userId]);
+        $groupIds = $this->db->select(AdminUserRelate::table(), 'admin_auth_id', ['admin_user_id' => $userId]);
         if (empty($groupIds)) {
             return [];
         }
-        $menuIds = $this->db->select(AdminMenuGroup::table(), 'admin_menu_id', ['admin_group_id' => $groupIds]);
+        $menuIds = $this->db->select(AdminMenuRelate::table(), 'admin_menu_id', ['admin_auth_id' => $groupIds]);
         if (empty($menuIds)) {
             return [];
         }
-        return $this->db->select(
-            AdminMenu::table(),
-            '*',
-            [
-                'AND'   => ['id' => $menuIds],
-                'ORDER' => ['sort' => 'ASC', 'id' => 'ASC']
-            ]
-        );
+        return $this->db->select( AdminMenu::table(),'*',['id' => $menuIds]);
     }
 
     public function getUserGroup($userId)
     {
-        $groupIds = $this->db->select(AdminUserGroup::table(), 'admin_group_id', ['admin_user_id' => $userId]);
+        $groupIds = $this->db->select(AdminUserRelate::table(), 'admin_auth_id', ['admin_user_id' => $userId]);
         if (empty($groupIds)) {
             return [];
         }
-        return $this->db->select(AdminGroup::table(), '*', ['id' => $groupIds]);
+        return $this->db->select(AdminAuth::table(), '*', ['id' => $groupIds]);
     }
 
     public function checkRequestAccess($user, $request): bool
     {
         $groupIds = $this->db->select(
-            AdminRequestGroup::table(),
-            'admin_group_id',
+            AdminRequestRelate::table(),
+            'admin_auth_id',
             ['admin_request_id' => $request['id']]
         );
         if (empty($groupIds)) {
             return false;
         }
-        $count = $this->db->count(AdminUserGroup::table(), [
+        $count = $this->db->count(AdminUserRelate::table(), [
             'AND' => [
                 'admin_user_id'  => $user['id'],
-                'admin_group_id' => $groupIds
+                'admin_auth_id' => $groupIds
             ]
         ]);
         return $count != 0;
     }
 
+
+
     public function delete($id)
     {
         $this->db->delete(self::table(), ['id' => $id]);
-        $this->db->delete(AdminUserGroup::table(), ['admin_user_id' => $id]);
+        $this->db->delete(AdminUserRelate::table(), ['admin_user_id' => $id]);
     }
 }

@@ -36,6 +36,6 @@ class AdminRequest extends Base
     public function delete($id)
     {
         $this->db->delete(self::table(), ['id' => $id]);
-        $this->db->delete(AdminRequestGroup::table(), ['admin_request_id' => $id]);
+        $this->db->delete(AdminRequestRelate::table(), ['admin_request_id' => $id]);
     }
 }

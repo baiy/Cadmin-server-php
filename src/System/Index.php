@@ -2,7 +2,6 @@
 
 namespace Baiy\Cadmin\System;
 
-use Baiy\Cadmin\Adapter\Upload;
 use Baiy\Cadmin\Handle;
 use Baiy\Cadmin\Helper;
 use Baiy\Cadmin\Model\AdminToken;

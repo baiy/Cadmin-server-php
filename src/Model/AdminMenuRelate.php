@@ -4,7 +4,7 @@ namespace Baiy\Cadmin\Model;
 
 use Baiy\Cadmin\InstanceTrait;
 
-class AdminMenuGroup extends Base
+class AdminMenuRelate extends Base
 {
     use InstanceTrait;
     use TableTrait;

@@ -3,8 +3,8 @@
 namespace Baiy\Cadmin\System;
 
 use Baiy\Cadmin\Model\AdminRequest;
-use Baiy\Cadmin\Model\AdminRequestGroup;
-use Baiy\Cadmin\Model\AdminUserGroup;
+use Baiy\Cadmin\Model\AdminRequestRelate;
+use Baiy\Cadmin\Model\AdminUserRelate;
 use Exception;
 
 class Request extends Base
@@ -24,9 +24,9 @@ class Request extends Base
         return [
             'lists' => array_map(function ($request) {
                 $request['groups'] = array_map(function ($group) {
-                    $group['uids'] = AdminUserGroup::instance()->getUids($group['id']);
+                    $group['uids'] = AdminUserRelate::instance()->getUids($group['id']);
                     return $group;
-                }, AdminRequestGroup::instance()->getGroups($request['id']));
+                }, AdminRequestRelate::instance()->getRelates($request['id']));
                 return $request;
             }, $lists),
             'total' => $total,

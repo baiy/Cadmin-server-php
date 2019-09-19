@@ -4,8 +4,11 @@ namespace Baiy\Cadmin;
 
 use Baiy\Cadmin\Adapter\Adapter;
 use Baiy\Cadmin\Model\AdminRequest;
+use Baiy\Cadmin\Model\AdminRequestRelate;
 use Baiy\Cadmin\Model\AdminToken;
 use Baiy\Cadmin\Model\AdminUser;
+use Baiy\Cadmin\Model\AdminUserAuth;
+use Baiy\Cadmin\Model\AdminUserRelate;
 use Exception;
 use Throwable;
 
@@ -136,7 +139,17 @@ class Controller
             return;
         }
 
-        if (!AdminUser::instance()->checkRequestAccess($this->user, $this->request)) {
+        $userGroupIds = AdminUserRelate::instance()->groupIds($this->user['id']);
+        if (empty($userGroupIds)) {
+            throw new Exception("用户未分配用户组");
+        }
+
+        $authIds = AdminRequestRelate::instance()->authIds($this->request['id']);
+        if (empty($authIds)) {
+            throw new Exception("请求未分配权限组");
+        }
+
+        if (!AdminUserAuth::instance()->check($userGroupIds,$authIds)) {
             throw new Exception("暂无权限");
         }
     }

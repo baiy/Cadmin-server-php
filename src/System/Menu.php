@@ -9,7 +9,7 @@ class Menu extends Base
 {
     public function lists()
     {
-        return AdminMenu::instance()->getAllSorted();
+        return AdminMenu::instance()->all();
     }
 
     public function sort($menus)
@@ -26,16 +26,15 @@ class Menu extends Base
 
     public function save($parent_id, $name, $url, $icon = "", $description = "", $id = 0)
     {
-
         if (empty($name)) {
             throw new Exception("菜单名称不能为空");
         }
         if (!empty($parent_id)) {
-            $parentMenu = AdminMenu::instance()->getById($parent_id);
-            if (empty($parentMenu)) {
+            $parent = $this->db->get(AdminMenu::table(), "*", ['id' => $parent_id]);
+            if (empty($parent)) {
                 throw new Exception("父菜单不存在");
             }
-            if (!empty($parentMenu['url'])) {
+            if (!empty($parent['url'])) {
                 throw new Exception("父菜单不是目录类型菜单");
             }
         }
