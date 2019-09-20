@@ -4,15 +4,12 @@ namespace Baiy\Cadmin\System;
 
 use Baiy\Cadmin\Admin;
 use Baiy\Cadmin\Model\Auth as AuthModel;
-use Baiy\Cadmin\Model\Block;
-use Baiy\Cadmin\Model\BlockRelate;
 use Baiy\Cadmin\Model\Menu;
 use Baiy\Cadmin\Model\MenuRelate;
 use Baiy\Cadmin\Model\Request;
 use Baiy\Cadmin\Model\RequestRelate;
 use Baiy\Cadmin\Model\UserGroup;
 use Baiy\Cadmin\Model\UserGroupRelate;
-use Baiy\Cadmin\Model\UserRelate;
 use Exception;
 use PDO;
 
@@ -35,10 +32,6 @@ class Auth extends Base
                 );
                 $item['menu_length']       = $this->db->count(
                     MenuRelate::table(),
-                    ['admin_auth_id' => $item['id']]
-                );
-                $item['block_length']      = $this->db->count(
-                    UserRelate::table(),
                     ['admin_auth_id' => $item['id']]
                 );
                 $item['user_group_length'] = $this->db->count(
@@ -124,62 +117,6 @@ class Auth extends Base
         return $this->db->delete(
             RequestRelate::table(),
             ['admin_auth_id' => $id, 'admin_request_id' => $requestId]
-        );
-    }
-
-    /**
-     * 获取区块权限分配情况
-     */
-    public function getBlock($id, $keyword = '')
-    {
-        $where = [];
-        if (!empty($keyword)) {
-            $where['OR'] = [
-                'name[~]'   => $keyword,
-                'action[~]' => $keyword,
-            ];
-        }
-        // 已分配权限
-        $existIds = $this->db->select(BlockRelate::table(), 'admin_block_id', ['admin_auth_id' => $id]);
-        if ($existIds) {
-            $where['id[!]'] = $existIds;
-        }
-
-        list($noAssign, $total) = $this->page(Block::table(), $where, ['id' => 'DESC']);
-        $assign = $this->db->query(
-            sprintf(
-                "SELECT blo.* FROM %s as blo INNER JOIN %s as rel ON rel.admin_block_id = blo.id ".
-                "WHERE rel.admin_auth_id = '%s' order by rel.id DESC",
-                Block::table(),
-                BlockRelate::table(),
-                $id
-            )
-        )->fetchAll(PDO::FETCH_ASSOC);
-        return [
-            'lists' => [$noAssign, $assign ?: []],
-            'total' => $total
-        ];
-    }
-
-    /**
-     * 区块分配
-     */
-    public function assignBlock($id, $blockId)
-    {
-        return $this->db->insert(BlockRelate::table(), [
-            'admin_auth_id'  => $id,
-            'admin_block_id' => $blockId,
-        ]);
-    }
-
-    /**
-     * 移除区块分配
-     */
-    public function removeBlock($id, $blockId)
-    {
-        return $this->db->delete(
-            BlockRelate::table(),
-            ['admin_auth_id' => $id, 'admin_block_id' => $blockId]
         );
     }
 

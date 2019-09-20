@@ -89,24 +89,6 @@ class User extends Base
         return $this->db->select(Menu::table(), '*', ['id' => $menuIds]);
     }
 
-    public function getUserBlock($id)
-    {
-        $auths = $this->getUserAuth($id);
-        if (empty($auths)) {
-            return [];
-        }
-
-        $blockIds = $this->db->select(
-            BlockRelate::table(), '
-            admin_block_id',
-            ['admin_auth_id' => array_column($auths, 'id')]
-        );
-        if (empty($blockIds)) {
-            return [];
-        }
-        return $this->db->select(Block::table(), '*', ['id' => $blockIds]);
-    }
-
     public function getUserRequest($id)
     {
         $auths = $this->getUserAuth($id);
