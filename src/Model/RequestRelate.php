@@ -2,17 +2,17 @@
 
 namespace Baiy\Cadmin\Model;
 
-use Baiy\Cadmin\InstanceTrait;
+use Baiy\Cadmin\Instance;
 
-class AdminBlockRelate extends Base
+class RequestRelate extends Base
 {
-    use InstanceTrait;
-    use TableTrait;
+    use Instance;
+    use Table;
 
     public function authIds($id)
     {
         return $this->db->select(self::table(), 'admin_auth_id', [
-            'admin_block_id' => $id
+            'admin_request_id' => $id
         ]) ?: [];
     }
 }

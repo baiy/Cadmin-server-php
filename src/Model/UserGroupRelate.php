@@ -2,12 +2,12 @@
 
 namespace Baiy\Cadmin\Model;
 
-use Baiy\Cadmin\InstanceTrait;
+use Baiy\Cadmin\Instance;
 
-class AdminUserAuth extends Base
+class UserGroupRelate extends Base
 {
-    use InstanceTrait;
-    use TableTrait;
+    use Instance;
+    use Table;
 
     public function check($userGroupIds, $authIds): bool
     {
@@ -22,5 +22,12 @@ class AdminUserAuth extends Base
         }
 
         return !empty(array_intersect($existAuthIds, $authIds));
+    }
+
+    public function authIds($id)
+    {
+        return $this->db->select(self::table(), 'admin_auth_id', [
+            'admin_user_group_id' => $id
+        ]) ?: [];
     }
 }

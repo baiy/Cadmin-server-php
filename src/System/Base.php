@@ -2,7 +2,7 @@
 
 namespace Baiy\Cadmin\System;
 
-use Baiy\Cadmin\Handle;
+use Baiy\Cadmin\Admin;
 use Baiy\Cadmin\Db;
 
 class Base
@@ -12,14 +12,14 @@ class Base
 
     public function __construct()
     {
-        $this->db = Handle::instance()->getAdapter()->db();
+        $this->db = Admin::instance()->getAdapter()->db();
     }
 
     public function page($table, $where = [], $order = "")
     {
         $where = $where ? ['AND' => $where] : [];
-        $offset = max(0, intval(Handle::instance()->getAdapter()->request->input('offset', 0)));
-        $pageSize = max(1, min(200, intval(Handle::instance()->getAdapter()->request->input('pageSize', 20))));
+        $offset = max(0, intval(Admin::instance()->getAdapter()->request->input('offset', 0)));
+        $pageSize = max(1, min(200, intval(Admin::instance()->getAdapter()->request->input('pageSize', 20))));
 
         $lists = $this->db->select(
             $table, '*',

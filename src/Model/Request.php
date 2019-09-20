@@ -4,12 +4,12 @@ namespace Baiy\Cadmin\Model;
 
 use Baiy\Cadmin\Dispatch\Dispatch;
 use Baiy\Cadmin\Dispatch\Local;
-use Baiy\Cadmin\InstanceTrait;
+use Baiy\Cadmin\Instance;
 
-class AdminRequest extends Base
+class Request extends Base
 {
-    use InstanceTrait;
-    use TableTrait;
+    use Instance;
+    use Table;
     const TYPE_LISTS = [
         1 => ['v' => 1, 'n' => '本地调用', 'dispatch' => Local::class],
     ];
@@ -36,6 +36,6 @@ class AdminRequest extends Base
     public function delete($id)
     {
         $this->db->delete(self::table(), ['id' => $id]);
-        $this->db->delete(AdminRequestRelate::table(), ['admin_request_id' => $id]);
+        $this->db->delete(RequestRelate::table(), ['admin_request_id' => $id]);
     }
 }

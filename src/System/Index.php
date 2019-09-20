@@ -2,10 +2,10 @@
 
 namespace Baiy\Cadmin\System;
 
-use Baiy\Cadmin\Handle;
+use Baiy\Cadmin\Admin;
 use Baiy\Cadmin\Helper;
-use Baiy\Cadmin\Model\AdminToken;
-use Baiy\Cadmin\Model\AdminUser;
+use Baiy\Cadmin\Model\Token;
+use Baiy\Cadmin\Model\User;
 use Exception;
 
 class Index extends Base
@@ -16,7 +16,7 @@ class Index extends Base
             throw new Exception("用户名和密码不能为空");
         }
 
-        $user = AdminUser::instance()->getByUserName($username);
+        $user = User::instance()->getByUserName($username);
         if (empty($user)) {
             throw new Exception("用户不存在");
         }
@@ -25,34 +25,33 @@ class Index extends Base
         }
 
         // 清理过期token
-        AdminToken::instance()->clearToken();
+        Token::instance()->clearToken();
 
         // 添加token
-        $token = AdminToken::instance()->addToken($user['id']);
+        $token = Token::instance()->addToken($user['id']);
 
         // 用户登录更新
-        AdminUser::instance()->loginUpdate($user['id']);
+        User::instance()->loginUpdate($user['id']);
 
         return ['token' => $token];
     }
 
     public function logout()
     {
-        $token = Handle::instance()->getAdapter()->request->input(Handle::TOKEN_INPUT_NAME);
+        $token = Admin::instance()->getAdapter()->request->input(Admin::TOKEN_INPUT_NAME);
         if (!empty($token)) {
-            AdminToken::instance()->deleteToken($token);
+            Token::instance()->deleteToken($token);
         }
     }
 
-    public function load($adminUserId)
+    public function load($userId)
     {
         return [
-            'user'    => AdminUser::instance()->getById($adminUserId),
-            'allUser' => array_map(function ($user) {
-                unset($user['password']);
-                return $user;
-            }, AdminUser::instance()->getAll()),
-            'menu'    => AdminUser::instance()->getUserMenu($adminUserId),
+            'user'          => User::instance()->getById($userId),
+            'allUser'       => User::instance()->getAll(),
+            'menu'          => User::instance()->getUserMenu($userId),
+            'blockAction'   => array_column(User::instance()->getUserBlock($userId), 'action'),
+            'requestAction' => array_column(User::instance()->getUserRequest($userId), 'action'),
         ];
     }
 }

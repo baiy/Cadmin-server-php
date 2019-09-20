@@ -2,13 +2,13 @@
 
 namespace Baiy\Cadmin\Model;
 
-use Baiy\Cadmin\InstanceTrait;
+use Baiy\Cadmin\Instance;
 use Exception;
 
-class AdminToken extends Base
+class Token extends Base
 {
-    use InstanceTrait;
-    use TableTrait;
+    use Instance;
+    use Table;
 
     public function deleteToken(string $token)
     {

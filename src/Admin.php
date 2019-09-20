@@ -6,9 +6,9 @@ use Baiy\Cadmin\Adapter\Adapter;
 use Closure;
 use Exception;
 
-class Handle
+class Admin
 {
-    use InstanceTrait;
+    use Instance;
     const ACTION_INPUT_NAME = "_action";
     const TOKEN_INPUT_NAME  = "_token";
     /** @var array 无需登录请求ID */
@@ -21,6 +21,8 @@ class Handle
     private $logCallback = null;
     /** @var Adapter 框架适配器 */
     private $adapter;
+    /** @var string 内置数据表前缀 */
+    private $tablePrefix = "admin_";
 
     private function __construct()
     {
@@ -32,7 +34,7 @@ class Handle
         $this->getAdapter()->router($path, Controller::class, 'run');
     }
 
-    public function setAdapter(Adapter $adapter): Handle
+    public function setAdapter(Adapter $adapter): Admin
     {
         $this->adapter = $adapter;
         return $this;
@@ -92,5 +94,15 @@ class Handle
             $callback = $this->logCallback;
             $callback($content);
         }
+    }
+
+    public function setTablePrefix(string $prefix): void
+    {
+        $this->tablePrefix = $prefix;
+    }
+
+    public function getTablePrefix(): string
+    {
+        return $this->tablePrefix;
     }
 }

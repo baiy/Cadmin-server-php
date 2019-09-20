@@ -2,7 +2,7 @@
 
 namespace Baiy\Cadmin;
 
-trait InstanceTrait
+trait Instance
 {
     protected static $instance;
 

@@ -2,9 +2,9 @@
 
 namespace Baiy\Cadmin\System;
 
-use Baiy\Cadmin\Model\AdminRequest;
-use Baiy\Cadmin\Model\AdminRequestRelate;
-use Baiy\Cadmin\Model\AdminUserRelate;
+use Baiy\Cadmin\Model\Auth;
+use Baiy\Cadmin\Model\Request as RequestModel;
+use Baiy\Cadmin\Model\RequestRelate;
 use Exception;
 
 class Request extends Base
@@ -19,15 +19,14 @@ class Request extends Base
             $where['type'] = $type;
         }
 
-        list($lists, $total) = $this->page(AdminRequest::table(), $where, ['id' => 'DESC']);
+        list($lists, $total) = $this->page(RequestModel::table(), $where, ['id' => 'DESC']);
 
         return [
-            'lists' => array_map(function ($request) {
-                $request['groups'] = array_map(function ($group) {
-                    $group['uids'] = AdminUserRelate::instance()->getUids($group['id']);
-                    return $group;
-                }, AdminRequestRelate::instance()->getRelates($request['id']));
-                return $request;
+            'lists' => array_map(function ($item) {
+                $item['auth'] = Auth::instance()->getByIds(
+                    RequestRelate::instance()->authIds($item['id'])
+                );
+                return $item;
             }, $lists),
             'total' => $total,
         ];
@@ -38,21 +37,19 @@ class Request extends Base
         if (empty($name) || empty($action) || empty($call)) {
             throw new Exception("参数错误");
         }
-        if (!in_array($type, array_column(AdminRequest::TYPE_LISTS, 'v'))) {
+        if (!in_array($type, array_column(RequestModel::TYPE_LISTS, 'v'))) {
             throw new Exception("类型错误");
         }
 
         if ($id) {
             $this->db->update(
-                AdminRequest::table(),
+                RequestModel::table(),
                 compact('name', 'action', 'type', 'call'),
                 compact('id')
             );
         } else {
-            $this->db->insert(AdminRequest::table(), compact('name', 'action', 'type', 'call'));
-            $id = $this->db->id();
+            $this->db->insert(RequestModel::table(), compact('name', 'action', 'type', 'call'));
         }
-        return $id;
     }
 
     public function remove($id)
@@ -60,7 +57,6 @@ class Request extends Base
         if (empty($id)) {
             throw new Exception("参数错误");
         }
-        AdminRequest::instance()->delete($id);
-        return true;
+        RequestModel::instance()->delete($id);
     }
 }

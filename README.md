@@ -22,9 +22,9 @@ composer require baiy/cadmin
 // 加入代码 `./route/app.php`
 // 
 use Baiy\Cadmin\Adapter\Think60\Adapter; // 加载tp适配器
-use Baiy\Cadmin\Handle;
+use Baiy\Cadmin\Admin;
 
-$handle = Handle::instance();
+$handle = Admin::instance();
 $handle->setAdapter(new Adapter());
 //$handle->setDebug(app()->isDebug()); // 系统调试标示[可选]
 //$handle->addNoCheckLoginRequestId($id); // 无需校验权限的api[]可选
@@ -40,9 +40,9 @@ $handle->router('/api/'); // api入口路由注册 请求记住此入口url
 // 加入代码 在 `./app/Providers/RouteServiceProvider.php::map()` 方法中
 
 use Baiy\Cadmin\Adapter\Laravel58\Adapter; // 加载Laravel适配器
-use Baiy\Cadmin\Handle;
+use Baiy\Cadmin\Admin;
 
-$handle = Handle::instance();
+$handle = Admin::instance();
 $handle->setAdapter(new Adapter());
 //$handle->setDebug(config('app.debug')); // 系统调试标示[可选]
 //$handle->addNoCheckLoginRequestId($id); // 无需校验权限的api[]可选

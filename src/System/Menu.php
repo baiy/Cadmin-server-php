@@ -2,21 +2,21 @@
 
 namespace Baiy\Cadmin\System;
 
-use Baiy\Cadmin\Model\AdminMenu;
+use Baiy\Cadmin\Model\Menu as MenuModel;
 use Exception;
 
 class Menu extends Base
 {
     public function lists()
     {
-        return AdminMenu::instance()->all();
+        return MenuModel::instance()->all();
     }
 
     public function sort($menus)
     {
         foreach ($menus as $menu) {
             $this->db->update(
-                AdminMenu::table(),
+                MenuModel::table(),
                 ['sort' => $menu['sort']],
                 ['id' => $menu['id']]
             );
@@ -30,7 +30,7 @@ class Menu extends Base
             throw new Exception("菜单名称不能为空");
         }
         if (!empty($parent_id)) {
-            $parent = $this->db->get(AdminMenu::table(), "*", ['id' => $parent_id]);
+            $parent = $this->db->get(MenuModel::table(), "*", ['id' => $parent_id]);
             if (empty($parent)) {
                 throw new Exception("父菜单不存在");
             }
@@ -40,17 +40,17 @@ class Menu extends Base
         }
         if ($id) {
             $this->db->update(
-                AdminMenu::table(),
+                MenuModel::table(),
                 compact('name', 'parent_id', 'url', 'icon', 'description'),
                 compact('id')
             );
         } else {
             // 计算排序值
             $sort = $this->db->get(
-                AdminMenu::table(), 'sort', ['AND' => compact('parent_id'), 'ORDER' => ['sort' => 'DESC']]
+                MenuModel::table(), 'sort', ['AND' => compact('parent_id'), 'ORDER' => ['sort' => 'DESC']]
             );
             $sort = $sort ? 0 : $sort + 1;
-            $this->db->insert(AdminMenu::table(), compact('name', 'parent_id', 'url', 'icon', 'description', 'sort'));
+            $this->db->insert(MenuModel::table(), compact('name', 'parent_id', 'url', 'icon', 'description', 'sort'));
         }
     }
 
@@ -59,7 +59,6 @@ class Menu extends Base
         if (empty($id)) {
             throw new Exception("参数错误");
         }
-        AdminMenu::instance()->delete($id);
-        return true;
+        MenuModel::instance()->delete($id);
     }
 }

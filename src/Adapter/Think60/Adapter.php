@@ -2,7 +2,7 @@
 
 namespace Baiy\Cadmin\Adapter\Think60;
 
-use Baiy\Cadmin\Model\AdminRequest;
+use Baiy\Cadmin\Model\Request;
 use Closure;
 use ReflectionMethod;
 use think\facade\Db;
@@ -48,7 +48,7 @@ class Adapter extends \Baiy\Cadmin\Adapter\Adapter
     public function getPdo()
     {
         // 临时方案: tp 需要先查询一次数据库 才能获取到pdo对象
-        Db::connect()->table(AdminRequest::table())->limit(1)->select();
+        Db::connect()->table(Request::table())->limit(1)->select();
         return Db::connect($this->connection ?: null)->getConnection()->getPdo();
     }
 }

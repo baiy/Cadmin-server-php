@@ -2,12 +2,12 @@
 
 namespace Baiy\Cadmin\Model;
 
-use Baiy\Cadmin\InstanceTrait;
+use Baiy\Cadmin\Instance;
 
-class AdminMenu extends Base
+class Menu extends Base
 {
-    use InstanceTrait;
-    use TableTrait;
+    use Instance;
+    use Table;
 
     public function all()
     {
@@ -17,6 +17,6 @@ class AdminMenu extends Base
     public function delete($id)
     {
         $this->db->delete(self::table(), ['id' => $id]);
-        $this->db->delete(AdminMenuRelate::table(), ['admin_menu_id' => $id]);
+        $this->db->delete(MenuRelate::table(), ['admin_menu_id' => $id]);
     }
 }

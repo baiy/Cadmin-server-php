@@ -2,7 +2,7 @@
 
 namespace Baiy\Cadmin\Model;
 
-use Baiy\Cadmin\Handle;
+use Baiy\Cadmin\Admin;
 use Baiy\Cadmin\Db;
 
 abstract class Base
@@ -12,6 +12,6 @@ abstract class Base
 
     public function __construct()
     {
-        $this->db = Handle::instance()->getAdapter()->db();
+        $this->db = Admin::instance()->getAdapter()->db();
     }
 }

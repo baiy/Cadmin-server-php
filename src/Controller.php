@@ -3,12 +3,12 @@
 namespace Baiy\Cadmin;
 
 use Baiy\Cadmin\Adapter\Adapter;
-use Baiy\Cadmin\Model\AdminRequest;
-use Baiy\Cadmin\Model\AdminRequestRelate;
-use Baiy\Cadmin\Model\AdminToken;
-use Baiy\Cadmin\Model\AdminUser;
-use Baiy\Cadmin\Model\AdminUserAuth;
-use Baiy\Cadmin\Model\AdminUserRelate;
+use Baiy\Cadmin\Model\Request;
+use Baiy\Cadmin\Model\RequestRelate;
+use Baiy\Cadmin\Model\Token;
+use Baiy\Cadmin\Model\User;
+use Baiy\Cadmin\Model\UserGroupRelate;
+use Baiy\Cadmin\Model\UserRelate;
 use Exception;
 use Throwable;
 
@@ -23,7 +23,7 @@ class Controller
 
     public function __construct()
     {
-        $this->adapter = Handle::instance()->getAdapter();
+        $this->adapter = Admin::instance()->getAdapter();
     }
 
     /**
@@ -48,7 +48,7 @@ class Controller
             $response = $this->response('success', '操作成功', $dispatch->execute($this->adapter));
         } catch (Throwable $e) {
             $data = [];
-            if (Handle::instance()->isDebug()) {
+            if (Admin::instance()->isDebug()) {
                 $data['trace'] = $this->getExceptionInfo($e);
             }
             if ($e->getCode() != 0) {
@@ -60,7 +60,7 @@ class Controller
         // 记录日志
         $this->logRecord($response);
 
-        if (Handle::instance()->isDebug()) {
+        if (Admin::instance()->isDebug()) {
             $response['sql'] = self::$listenSql;
         }
         return $this->adapter->sendResponse($response);
@@ -82,12 +82,12 @@ class Controller
      */
     private function initRequest()
     {
-        $action = $this->adapter->request->input(Handle::ACTION_INPUT_NAME);
+        $action = $this->adapter->request->input(Admin::ACTION_INPUT_NAME);
         if (empty($action)) {
             throw new Exception("action参数错误");
         }
 
-        $request = AdminRequest::instance()->getByAction($action);
+        $request = Request::instance()->getByAction($action);
         if (empty($request)) {
             throw new Exception("action 不存在");
         }
@@ -100,17 +100,17 @@ class Controller
      */
     private function initUser()
     {
-        $token = $this->adapter->request->input(Handle::TOKEN_INPUT_NAME);
+        $token = $this->adapter->request->input(Admin::TOKEN_INPUT_NAME);
         if (empty($token)) {
             return;
         }
 
-        $userId = AdminToken::instance()->getUserId($token);
+        $userId = Token::instance()->getUserId($token);
         if (empty($userId)) {
             return;
         }
 
-        $user = AdminUser::instance()->getById($userId);
+        $user = User::instance()->getById($userId);
         if (!empty($user)) {
             $this->user = $user;
         }
@@ -123,7 +123,7 @@ class Controller
     private function checkAccess()
     {
         $requestId = $this->request['id'];
-        if (in_array($requestId, Handle::instance()->getNoCheckLoginRequestIds())) {
+        if (in_array($requestId, Admin::instance()->getNoCheckLoginRequestIds())) {
             return;
         }
 
@@ -131,32 +131,32 @@ class Controller
             throw new Exception("未登录系统");
         }
 
-        if (AdminUser::instance()->isDisabled($this->user)) {
+        if (User::instance()->isDisabled($this->user)) {
             throw new Exception("用户已被禁用");
         }
 
-        if (in_array($requestId, Handle::instance()->getOnlyLoginRequestIds())) {
+        if (in_array($requestId, Admin::instance()->getOnlyLoginRequestIds())) {
             return;
         }
 
-        $userGroupIds = AdminUserRelate::instance()->groupIds($this->user['id']);
+        $userGroupIds = UserRelate::instance()->groupIds($this->user['id']);
         if (empty($userGroupIds)) {
             throw new Exception("用户未分配用户组");
         }
 
-        $authIds = AdminRequestRelate::instance()->authIds($this->request['id']);
+        $authIds = RequestRelate::instance()->authIds($this->request['id']);
         if (empty($authIds)) {
             throw new Exception("请求未分配权限组");
         }
 
-        if (!AdminUserAuth::instance()->check($userGroupIds,$authIds)) {
+        if (!UserGroupRelate::instance()->check($userGroupIds,$authIds)) {
             throw new Exception("暂无权限");
         }
     }
 
     private function dispatch()
     {
-        $dispatch = AdminRequest::getDispatch($this->request['type']);
+        $dispatch = Request::getDispatch($this->request['type']);
         if (empty($dispatch)) {
             throw new Exception("调度对象不存在");
         }
@@ -184,7 +184,7 @@ class Controller
 
         $log = [
             'time'          => date('Y-m-d H:i:s'),
-            'action'        => $this->adapter->request->input(Handle::ACTION_INPUT_NAME),
+            'action'        => $this->adapter->request->input(Admin::ACTION_INPUT_NAME),
             'request'       => [
                 'input'  => $input,
                 'method' => $this->adapter->request->method(),
@@ -195,6 +195,6 @@ class Controller
             'sql'           => self::$listenSql,
             'admin_user_id' => $this->user ? $this->user['id'] : 0,
         ];
-        Handle::instance()->log($log);
+        Admin::instance()->log($log);
     }
 }

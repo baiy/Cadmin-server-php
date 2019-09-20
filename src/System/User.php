@@ -3,7 +3,7 @@
 namespace Baiy\Cadmin\System;
 
 use Baiy\Cadmin\Helper;
-use Baiy\Cadmin\Model\AdminUser;
+use Baiy\Cadmin\Model\User as UserModel;
 use Exception;
 
 class User extends Base
@@ -15,13 +15,12 @@ class User extends Base
             $where['username[~]'] = $keyword;
         }
 
-        list($lists, $total) = $this->page(AdminUser::table(), $where, ['id' => 'DESC']);
+        list($lists, $total) = $this->page(UserModel::table(), $where, ['id' => 'DESC']);
 
         return [
-            'lists' => array_map(function ($user) {
-                unset($user['password']);
-                $user['groups'] = AdminUser::instance()->getUserGroup($user['id']);
-                return $user;
+            'lists' => array_map(function ($item) {
+                $item['group'] = UserModel::instance()->getUserGroup($item['id']);
+                return $item;
             }, $lists),
             'total' => $total,
         ];
@@ -33,7 +32,7 @@ class User extends Base
             throw new Exception("用户名不能为空");
         }
 
-        if (!in_array($status, array_column(AdminUser::STATUS_LISTS, 'v'))) {
+        if (!in_array($status, array_column(UserModel::STATUS_LISTS, 'v'))) {
             throw new Exception("状态错误");
         }
 
@@ -43,26 +42,24 @@ class User extends Base
 
         if ($id) {
             $this->db->update(
-                AdminUser::table(),
+                UserModel::table(),
                 compact('username', 'status'),
                 compact('id')
             );
             if (!empty($password)) {
                 $this->db->update(
-                    AdminUser::table(),
+                    UserModel::table(),
                     ['password' => Helper::createPassword($password)],
                     compact('id')
                 );
             }
         } else {
-            $this->db->insert(AdminUser::table(), [
+            $this->db->insert(UserModel::table(), [
                 'username' => $username,
                 'status'   => $status,
                 'password' => Helper::createPassword($password),
             ]);
-            $id = $this->db->id();
         }
-        return $id;
     }
 
     public function remove($id)
@@ -70,7 +67,6 @@ class User extends Base
         if (empty($id)) {
             throw new Exception("参数错误");
         }
-        AdminUser::instance()->delete($id);
-        return true;
+        UserModel::instance()->delete($id);
     }
 }

@@ -2,9 +2,9 @@
 
 namespace Baiy\Cadmin\System;
 
-use Baiy\Cadmin\Model\AdminAuth;
-use Baiy\Cadmin\Model\AdminBlock;
-use Baiy\Cadmin\Model\AdminBlockRelate;
+use Baiy\Cadmin\Model\Auth;
+use Baiy\Cadmin\Model\Block as BlockModel;
+use Baiy\Cadmin\Model\BlockRelate;
 use Exception;
 
 class Block extends Base
@@ -16,14 +16,14 @@ class Block extends Base
             $where['OR'] = ['name[~]' => $keyword, 'action[~]' => $keyword];
         }
 
-        list($lists, $total) = $this->page(AdminBlock::table(), $where, ['id' => 'DESC']);
+        list($lists, $total) = $this->page(BlockModel::table(), $where, ['id' => 'DESC']);
 
         return [
-            'lists' => array_map(function ($block) {
-                $block['auth'] = AdminAuth::instance()->getByIds(
-                    AdminBlockRelate::instance()->authIds($block['id'])
+            'lists' => array_map(function ($item) {
+                $item['auth'] = Auth::instance()->getByIds(
+                    BlockRelate::instance()->authIds($item['id'])
                 );
-                return $block;
+                return $item;
             }, $lists),
             'total' => $total,
         ];
@@ -40,13 +40,12 @@ class Block extends Base
 
         if ($id) {
             $this->db->update(
-                AdminBlock::table(),
+                BlockModel::table(),
                 compact('name', 'action', 'description'),
                 compact('id')
             );
         } else {
-            $this->db->insert(AdminBlock::table(), compact('name', 'action', 'description'));
-            $this->db->id();
+            $this->db->insert(BlockModel::table(), compact('name', 'action', 'description'));
         }
     }
 
@@ -55,7 +54,6 @@ class Block extends Base
         if (empty($id)) {
             throw new Exception("参数错误");
         }
-        AdminBlock::instance()->delete($id);
-        return true;
+        BlockModel::instance()->delete($id);
     }
 }
