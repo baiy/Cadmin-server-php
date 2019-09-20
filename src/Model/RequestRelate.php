@@ -15,4 +15,11 @@ class RequestRelate extends Base
             'admin_request_id' => $id
         ]) ?: [];
     }
+
+    public function requestIds($id)
+    {
+        return $this->db->select(self::table(), 'admin_request_id', [
+            'admin_auth_id' => $id
+        ]) ?: [];
+    }
 }

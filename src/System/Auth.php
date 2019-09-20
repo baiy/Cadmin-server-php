@@ -26,17 +26,16 @@ class Auth extends Base
 
         return [
             'lists' => array_map(function ($item) {
-                $item['request_length']    = $this->db->count(
-                    RequestRelate::table(),
-                    ['admin_auth_id' => $item['id']]
+                $item['request'] = Request::instance()->getByIds(
+                    RequestRelate::instance()->requestIds($item['id'])
                 );
-                $item['menu_length']       = $this->db->count(
-                    MenuRelate::table(),
-                    ['admin_auth_id' => $item['id']]
+
+                $item['menu'] = Menu::instance()->getByIds(
+                    MenuRelate::instance()->menuIds($item['id'])
                 );
-                $item['user_group_length'] = $this->db->count(
-                    UserGroupRelate::table(),
-                    ['admin_auth_id' => $item['id']]
+
+                $item['userGroup'] = UserGroup::instance()->getByIds(
+                    UserGroupRelate::instance()->userGroupIds($item['id'])
                 );
                 return $item;
             }, $lists),
@@ -93,7 +92,7 @@ class Auth extends Base
             )
         )->fetchAll(PDO::FETCH_ASSOC);
         return [
-            'lists' => [$noAssign, $assign ?: []],
+            'lists' => ['assign' => $assign, 'noAssign' => $noAssign],
             'total' => $total
         ];
     }
@@ -103,10 +102,10 @@ class Auth extends Base
      */
     public function assignRequest($id, $requestId)
     {
-        return $this->db->insert(RequestRelate::table(), [
-            'admin_auth_id'    => $id,
-            'admin_request_id' => $requestId,
-        ]);
+        $this->db->insert(
+            RequestRelate::table(),
+            ['admin_auth_id' => $id, 'admin_request_id' => $requestId]
+        );
     }
 
     /**
@@ -114,7 +113,7 @@ class Auth extends Base
      */
     public function removeRequest($id, $requestId)
     {
-        return $this->db->delete(
+        $this->db->delete(
             RequestRelate::table(),
             ['admin_auth_id' => $id, 'admin_request_id' => $requestId]
         );
@@ -146,7 +145,7 @@ class Auth extends Base
             )
         )->fetchAll(PDO::FETCH_ASSOC);
         return [
-            'lists' => [$noAssign, $assign ?: []],
+            'lists' => ['assign' => $assign, 'noAssign' => $noAssign],
             'total' => $total
         ];
     }
@@ -156,7 +155,7 @@ class Auth extends Base
      */
     public function assignUserGroup($id, $userGroupId)
     {
-        return $this->db->insert(UserGroupRelate::table(), [
+        $this->db->insert(UserGroupRelate::table(), [
             'admin_auth_id'       => $id,
             'admin_user_group_id' => $userGroupId,
         ]);
@@ -167,7 +166,7 @@ class Auth extends Base
      */
     public function removeUserGroup($id, $userGroupId)
     {
-        return $this->db->delete(
+        $this->db->delete(
             UserGroupRelate::table(),
             ['admin_auth_id' => $id, 'admin_user_group_id' => $userGroupId]
         );
@@ -189,7 +188,8 @@ class Auth extends Base
     {
         if (empty($menuIds)) {
             // 清空
-            return $this->db->delete(MenuRelate::table(), ['admin_auth_id' => $id]);
+            $this->db->delete(MenuRelate::table(), ['admin_auth_id' => $id]);
+            return;
         }
         $existIds = $this->db->select(MenuRelate::table(), 'admin_menu_id', ['admin_auth_id' => $id]);
         // 删除
@@ -210,6 +210,5 @@ class Auth extends Base
                 ]);
             }
         }
-        return true;
     }
 }

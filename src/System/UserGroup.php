@@ -23,12 +23,11 @@ class UserGroup extends Base
 
         return [
             'lists' => array_map(function ($item) {
-                $item['auth']        = Auth::instance()->getByIds(
+                $item['auth'] = Auth::instance()->getByIds(
                     UserGroupRelate::instance()->authIds($item['id'])
                 );
-                $item['user_length'] = $this->db->count(
-                    UserRelate::table(),
-                    ['admin_user_group_id' => $item['id']]
+                $item['user'] = User::instance()->getByIds(
+                    UserRelate::instance()->userIds($item['id'])
                 );
                 return $item;
             }, $lists),
@@ -36,7 +35,7 @@ class UserGroup extends Base
         ];
     }
 
-    public function save($name, $description, $id = 0)
+    public function save($name, $description = "", $id = 0)
     {
         if (empty($name)) {
             throw new Exception("权限组名称不能为空");
@@ -63,7 +62,7 @@ class UserGroup extends Base
     {
         $where = [];
         if (!empty($keyword)) {
-            $where['name[~]'] = $keyword;
+            $where['username[~]'] = $keyword;
         }
         // 已分配权限
         $existIds = $this->db->select(UserRelate::table(), 'admin_user_id', ['admin_user_group_id' => $id]);
@@ -82,7 +81,7 @@ class UserGroup extends Base
             )
         )->fetchAll(PDO::FETCH_ASSOC);
         return [
-            'lists' => [$noAssign, $assign ?: []],
+            'lists' => ['assign' => $assign, 'noAssign' => $noAssign],
             'total' => $total
         ];
     }
@@ -92,7 +91,7 @@ class UserGroup extends Base
      */
     public function assignUser($id, $userId)
     {
-        return $this->db->insert(UserRelate::table(), [
+        $this->db->insert(UserRelate::table(), [
             'admin_user_group_id' => $id,
             'admin_user_id'       => $userId,
         ]);
@@ -101,11 +100,11 @@ class UserGroup extends Base
     /**
      * 移除用户分配
      */
-    public function removeUser($id, $requestId)
+    public function removeUser($id, $userId)
     {
-        return $this->db->delete(
+        $this->db->delete(
             UserRelate::table(),
-            ['admin_user_group_id' => $id, 'admin_user_id' => $requestId]
+            ['admin_user_group_id' => $id, 'admin_user_id' => $userId]
         );
     }
 }

@@ -9,6 +9,11 @@ class Menu extends Base
     use Instance;
     use Table;
 
+    public function getByIds($ids)
+    {
+        return $ids ? $this->db->select(self::table(), '*', ['id' => $ids]) : [];
+    }
+
     public function all()
     {
         return $this->db->select(self::table(), '*', ['ORDER' => ['sort' => 'ASC', 'id' => 'ASC']]);

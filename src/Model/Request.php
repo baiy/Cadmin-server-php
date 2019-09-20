@@ -14,6 +14,11 @@ class Request extends Base
         1 => ['v' => 1, 'n' => '本地调用', 'dispatch' => Local::class],
     ];
 
+    public function getByIds($ids)
+    {
+        return $ids ? $this->db->select(self::table(), '*', ['id' => $ids]) : [];
+    }
+
     /**
      * 获取调度对象
      * @param int $type

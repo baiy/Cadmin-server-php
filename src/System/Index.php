@@ -44,13 +44,13 @@ class Index extends Base
         }
     }
 
-    public function load($userId)
+    public function load($adminUserId)
     {
         return [
-            'user'    => User::instance()->getById($userId),
+            'user'    => User::instance()->getById($adminUserId),
             'allUser' => User::instance()->getAll(),
-            'menu'    => User::instance()->getUserMenu($userId),
-            'request' => User::instance()->getUserRequest($userId),
+            'menu'    => User::instance()->getUserMenu($adminUserId),
+            'request' => User::instance()->getUserRequest($adminUserId),
         ];
     }
 }

@@ -15,4 +15,11 @@ class UserRelate extends Base
             'admin_user_id' => $id
         ]) ?: [];
     }
+
+    public function userIds($id)
+    {
+        return $this->db->select(self::table(), 'admin_user_id', [
+            'admin_user_group_id' => $id
+        ]) ?: [];
+    }
 }

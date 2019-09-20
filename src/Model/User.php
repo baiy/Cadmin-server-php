@@ -14,6 +14,11 @@ class User extends Base
         'disabled' => ['v' => 2, 'n' => '禁用'],
     ];
 
+    public function getByIds($ids)
+    {
+        return $ids ? $this->db->select(self::table(), '*', ['id' => $ids]) : [];
+    }
+
     /**
      * 是否禁用
      * @return bool
