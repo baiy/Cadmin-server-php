@@ -21,10 +21,9 @@ class Menu extends Base
                 ['id' => $menu['id']]
             );
         }
-        return true;
     }
 
-    public function save($parent_id, $name, $url, $icon = "", $description = "", $id = 0)
+    public function save($parent_id, $name, $url = "", $icon = "", $description = "", $id = 0)
     {
         if (empty($name)) {
             throw new Exception("菜单名称不能为空");
@@ -49,7 +48,7 @@ class Menu extends Base
             $sort = $this->db->get(
                 MenuModel::table(), 'sort', ['AND' => compact('parent_id'), 'ORDER' => ['sort' => 'DESC']]
             );
-            $sort = $sort ? 0 : $sort + 1;
+            $sort = $sort ? $sort + 1 : 0;
             $this->db->insert(MenuModel::table(), compact('name', 'parent_id', 'url', 'icon', 'description', 'sort'));
         }
     }
