@@ -3,6 +3,8 @@
 namespace Baiy\Cadmin;
 
 use Baiy\Cadmin\Adapter\Adapter;
+use Baiy\Cadmin\Dispatch\Dispatch;
+use Baiy\Cadmin\Dispatch\Dispatcher;
 use Closure;
 use Exception;
 
@@ -23,9 +25,15 @@ class Admin
     private $adapter;
     /** @var string 内置数据表前缀 */
     private $tablePrefix = "admin_";
+    /** @var Dispatch[] */
+    private $dispatchers = [];
+    /** @var Controller */
+    private $controller;
 
     private function __construct()
     {
+        // 注册系统默认调用器
+        $this->registerDispatcher(new Dispatcher());
     }
 
     // 注册后台路由入口
@@ -104,5 +112,36 @@ class Admin
     public function getTablePrefix(): string
     {
         return $this->tablePrefix;
+    }
+
+    public function registerDispatcher(Dispatch $dispatcher)
+    {
+        $this->dispatchers[$dispatcher->key()] = $dispatcher;
+    }
+
+    public function getDispatcher($key): Dispatch
+    {
+        if (!isset($this->dispatchers[$key])) {
+            throw new \Exception(sprintf("未找到请求类型(%s)对应的调度程序", $key));
+        }
+        return $this->dispatchers[$key];
+    }
+
+    /**
+     * @return Dispatch[]
+     */
+    public function allDispatcher()
+    {
+        return $this->dispatchers;
+    }
+
+    public function getController(): Controller
+    {
+        return $this->controller;
+    }
+
+    public function setController(Controller $controller): void
+    {
+        $this->controller = $controller;
     }
 }

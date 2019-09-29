@@ -15,7 +15,7 @@ use Throwable;
 class Controller
 {
     // 监听sql执行数据
-    public static $listenSql = [];
+    private $listenSql = [];
     private $request = [];
     private $user = [];
     /** @var Adapter */
@@ -24,6 +24,7 @@ class Controller
     public function __construct()
     {
         $this->adapter = Admin::instance()->getAdapter();
+        Admin::instance()->setController($this);
     }
 
     /**
@@ -34,7 +35,7 @@ class Controller
         try {
             // 数据库监听
             $this->adapter->listen(function ($sql, $bindings, $time) {
-                Controller::addListenSql($sql, $bindings, $time);
+                $this->addListenSql($sql, $bindings, $time);
             });
 
             $this->initRequest();
@@ -43,9 +44,7 @@ class Controller
 
             $this->checkAccess();
 
-            $dispatch = $this->dispatch();
-
-            $response = $this->response('success', '操作成功', $dispatch->execute($this->adapter));
+            $response = $this->response('success', '操作成功',  $this->dispatch());
         } catch (Throwable $e) {
             $data = [];
             if (Admin::instance()->isDebug()) {
@@ -61,14 +60,14 @@ class Controller
         $this->logRecord($response);
 
         if (Admin::instance()->isDebug()) {
-            $response['sql'] = self::$listenSql;
+            $response['sql'] = $this->listenSql;
         }
         return $this->adapter->sendResponse($response);
     }
 
-    public static function addListenSql($sql, $bindings, $time): void
+    public function addListenSql($sql, $bindings, $time): void
     {
-        self::$listenSql[] = compact('sql', 'time', 'bindings');
+        $this->listenSql[] = compact('sql', 'time', 'bindings');
     }
 
     private function response($status, $info, $data)
@@ -149,20 +148,15 @@ class Controller
             throw new Exception("请求未分配权限组");
         }
 
-        if (!UserGroupRelate::instance()->check($userGroupIds,$authIds)) {
+        if (!UserGroupRelate::instance()->check($userGroupIds, $authIds)) {
             throw new Exception("暂无权限");
         }
     }
 
     private function dispatch()
     {
-        $dispatch = Request::getDispatch($this->request['type']);
-        if (empty($dispatch)) {
-            throw new Exception("调度对象不存在");
-        }
-        $dispatch->setCallInfo($this->request['call']);
-        $dispatch->setUserId($this->user ? $this->user['id'] : 0);
-        return $dispatch;
+        $dispatcher = Admin::instance()->getDispatcher($this->request['type']);
+        return $dispatcher->execute($this);
     }
 
     private function getExceptionInfo(Throwable $e)
@@ -192,9 +186,27 @@ class Controller
                 'url'    => $this->adapter->request->url(),
             ],
             'response'      => $response,
-            'sql'           => self::$listenSql,
+            'sql'           => $this->listenSql,
             'admin_user_id' => $this->user ? $this->user['id'] : 0,
         ];
         Admin::instance()->log($log);
+    }
+
+    public function getAdapter(): Adapter
+    {
+        return $this->adapter;
+    }
+
+    public function getUser(): array
+    {
+        return $this->user;
+    }
+
+    /**
+     * @return array
+     */
+    public function getRequest(): array
+    {
+        return $this->request;
     }
 }

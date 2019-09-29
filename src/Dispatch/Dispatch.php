@@ -2,13 +2,15 @@
 
 namespace Baiy\Cadmin\Dispatch;
 
-use Baiy\Cadmin\Adapter\Adapter;
+use Baiy\Cadmin\Controller;
 
 interface Dispatch
 {
-    public function setCallInfo($call);
+    public function key();
 
-    public function setUserId($userId);
+    public function description();
 
-    public function execute(Adapter $adapter);
+    public function name();
+
+    public function execute(Controller $context);
 }

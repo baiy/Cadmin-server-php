@@ -11,7 +11,11 @@ class Db extends Medoo
     {
         $startTime = microtime(true);
         $result = parent::exec($query, $map);
-        Controller::addListenSql($this->generate($query, $map),[], number_format((microtime(true) - $startTime), 6));
+        Admin::instance()->getController()->addListenSql(
+            $this->generate($query, $map),
+            [],
+            number_format((microtime(true) - $startTime), 6)
+        );
         return $result;
     }
 }

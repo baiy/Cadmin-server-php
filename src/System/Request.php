@@ -2,6 +2,8 @@
 
 namespace Baiy\Cadmin\System;
 
+use Baiy\Cadmin\Admin;
+use Baiy\Cadmin\Dispatch\Dispatch;
 use Baiy\Cadmin\Model\Auth;
 use Baiy\Cadmin\Model\Request as RequestModel;
 use Baiy\Cadmin\Model\RequestRelate;
@@ -34,11 +36,8 @@ class Request extends Base
 
     public function save($name, $action, $type, $call, $id = "")
     {
-        if (empty($name) || empty($action) || empty($call)) {
+        if (empty($name) || empty($action) || empty($call) || empty($type)) {
             throw new Exception("参数错误");
-        }
-        if (!in_array($type, array_column(RequestModel::TYPE_LISTS, 'v'))) {
-            throw new Exception("类型错误");
         }
 
         if ($id) {
@@ -58,5 +57,16 @@ class Request extends Base
             throw new Exception("参数错误");
         }
         RequestModel::instance()->delete($id);
+    }
+
+    public function type()
+    {
+        return array_values(array_map(function (Dispatch $dispatcher) {
+            return [
+                'type'        => $dispatcher->key(),
+                'name'        => $dispatcher->name(),
+                'description' => $dispatcher->description(),
+            ];
+        }, Admin::instance()->allDispatcher()));
     }
 }
