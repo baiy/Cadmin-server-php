@@ -3,7 +3,6 @@
 namespace Baiy\Cadmin\System;
 
 use Baiy\Cadmin\Admin;
-use Baiy\Cadmin\Helper;
 use Baiy\Cadmin\Model\Token;
 use Baiy\Cadmin\Model\User;
 use Exception;
@@ -20,7 +19,7 @@ class Index extends Base
         if (empty($user)) {
             throw new Exception("用户不存在");
         }
-        if (!Helper::checkPassword($password, $user['password'])) {
+        if (!Admin::instance()->getPassword()->verify($password, $user['password'])) {
             throw new Exception("密码错误");
         }
 
@@ -47,10 +46,12 @@ class Index extends Base
     public function load($adminUserId)
     {
         return [
-            'user'    => User::instance()->getById($adminUserId),
-            'allUser' => User::instance()->getAll(),
-            'menu'    => User::instance()->getUserMenu($adminUserId),
-            'request' => User::instance()->getUserRequest($adminUserId),
+            'user'      => User::instance()->getById($adminUserId),
+            'allUser'   => User::instance()->getAll(),
+            'menu'      => User::instance()->getUserMenu($adminUserId),
+            'request'   => User::instance()->getUserRequest($adminUserId),
+            'userGroup' => User::instance()->getUserGroup($adminUserId),
+            'auth'      => User::instance()->getUserAuth($adminUserId),
         ];
     }
 }

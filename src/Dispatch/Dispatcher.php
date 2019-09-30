@@ -10,8 +10,10 @@ class Dispatcher implements Dispatch
     public function execute(Controller $context)
     {
         $request = $context->getRequest();
-        list($class, $method) = explode("::", $request['call']);
-        $class = '\\'.ltrim($class, '\\');
+
+        $lists  = explode(".", $request['call']);
+        $class  = '\\'.ltrim(implode("\\", array_slice($lists, 0, count($lists) - 1)), '\\');
+        $method = $lists[count($lists) - 1];
 
         if (!class_exists($class)) {
             throw new Exception("无法定位到处理类[".$class."]");

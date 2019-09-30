@@ -5,6 +5,8 @@ namespace Baiy\Cadmin;
 use Baiy\Cadmin\Adapter\Adapter;
 use Baiy\Cadmin\Dispatch\Dispatch;
 use Baiy\Cadmin\Dispatch\Dispatcher;
+use Baiy\Cadmin\Password\Password;
+use Baiy\Cadmin\Password\PasswrodDefault;
 use Closure;
 use Exception;
 
@@ -29,11 +31,15 @@ class Admin
     private $dispatchers = [];
     /** @var Controller */
     private $controller;
+    /** @var Password */
+    private $password;
 
     private function __construct()
     {
         // 注册系统默认调用器
         $this->registerDispatcher(new Dispatcher());
+        // 注册系统默认密码生成器
+        $this->registerPassword(new PasswrodDefault());
     }
 
     // 注册后台路由入口
@@ -133,6 +139,16 @@ class Admin
     public function allDispatcher()
     {
         return $this->dispatchers;
+    }
+
+    public function registerPassword(Password $password)
+    {
+        $this->password = $password;
+    }
+
+    public function getPassword(): Password
+    {
+        return $this->password;
     }
 
     public function getController(): Controller

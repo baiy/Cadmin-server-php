@@ -2,7 +2,7 @@
 
 namespace Baiy\Cadmin\System;
 
-use Baiy\Cadmin\Helper;
+use Baiy\Cadmin\Admin;
 use Baiy\Cadmin\Model\User as UserModel;
 use Exception;
 
@@ -19,7 +19,7 @@ class User extends Base
 
         return [
             'lists' => array_map(function ($item) {
-                $item['group'] = UserModel::instance()->getUserGroup($item['id']);
+                $item['userGroup'] = UserModel::instance()->getUserGroup($item['id']);
                 return $item;
             }, $lists),
             'total' => $total,
@@ -49,7 +49,7 @@ class User extends Base
             if (!empty($password)) {
                 $this->db->update(
                     UserModel::table(),
-                    ['password' => Helper::createPassword($password)],
+                    ['password' => Admin::instance()->getPassword()->hash($password)],
                     compact('id')
                 );
             }
@@ -57,7 +57,7 @@ class User extends Base
             $this->db->insert(UserModel::table(), [
                 'username' => $username,
                 'status'   => $status,
-                'password' => Helper::createPassword($password),
+                'password' => Admin::instance()->getPassword()->hash($password),
             ]);
         }
     }
