@@ -2,37 +2,36 @@
 
 namespace Baiy\Cadmin;
 
-use Baiy\Cadmin\Adapter\Adapter;
 use Baiy\Cadmin\Dispatch\Dispatch;
 use Baiy\Cadmin\Dispatch\Dispatcher;
 use Baiy\Cadmin\Password\Password;
 use Baiy\Cadmin\Password\PasswrodDefault;
 use Closure;
-use Exception;
+use PDO;
 
 class Admin
 {
     use Instance;
-    const ACTION_INPUT_NAME = "_action";
-    const TOKEN_INPUT_NAME  = "_token";
+    private $inputActionName = "_action";
+    private $inputTokenName = "_token";
     /** @var array 无需登录请求ID */
     private $noCheckLoginRequestIds = [1];
     /** @var array 仅需登录请求ID */
     private $onlyLoginRequestIds = [2, 3];
-    /** @var bool 系统调试标示 */
-    private $debug = false;
     /** @var Closure 日志记录回调函数 */
     private $logCallback = null;
-    /** @var Adapter 框架适配器 */
-    private $adapter;
     /** @var string 内置数据表前缀 */
     private $tablePrefix = "admin_";
-    /** @var Dispatch[] */
+    /** @var Dispatch[] 请求调度器 */
     private $dispatchers = [];
-    /** @var Controller */
-    private $controller;
-    /** @var Password */
+    /** @var Context 请求处理上下文对象 */
+    private $context;
+    /** @var Password 密码生成对象 */
     private $password;
+    /** @var PDO 数据库操作对象 */
+    private $pdo;
+    /** @var Request 请求对象 */
+    private $request;
 
     private function __construct()
     {
@@ -42,39 +41,22 @@ class Admin
         $this->registerPassword(new PasswrodDefault());
     }
 
-    // 注册后台路由入口
-    public function router($path = "/")
+    // 运行入口
+    public function run()
     {
-        $this->getAdapter()->router($path, Controller::class, 'run');
+        // 初始化上下文对象
+        $this->context = (new Context($this));
+        return $this->context->run();
     }
 
-    public function setAdapter(Adapter $adapter): Admin
+    public function setPdo(PDO $pdo)
     {
-        $this->adapter = $adapter;
-        return $this;
+        $this->pdo = $pdo;
     }
 
-    public function setDbConnection($name)
+    public function getPdo()
     {
-        $this->getAdapter()->setConnection($name);
-    }
-
-    public function getAdapter(): Adapter
-    {
-        if (empty($this->adapter)) {
-            throw new Exception("初始化后台服务失败");
-        }
-        return $this->adapter;
-    }
-
-    public function setDebug(bool $debug): void
-    {
-        $this->debug = $debug;
-    }
-
-    public function isDebug(): bool
-    {
-        return $this->debug;
+        return $this->pdo;
     }
 
     public function addNoCheckLoginRequestId(int $id): void
@@ -102,11 +84,11 @@ class Admin
         $this->logCallback = $callback;
     }
 
-    public function log(array $content)
+    public function log(Log $log)
     {
         if ($this->logCallback instanceof Closure) {
             $callback = $this->logCallback;
-            $callback($content);
+            $callback($log);
         }
     }
 
@@ -151,13 +133,40 @@ class Admin
         return $this->password;
     }
 
-    public function getController(): Controller
+    public function getContext(): Context
     {
-        return $this->controller;
+        return $this->context;
     }
 
-    public function setController(Controller $controller): void
+    /**
+     * @return string
+     */
+    public function getInputActionName(): string
     {
-        $this->controller = $controller;
+        return $this->inputActionName;
+    }
+
+    /**
+     * @param  string  $name
+     */
+    public function setInputActionName(string $name): void
+    {
+        $this->inputActionName = $name;
+    }
+
+    /**
+     * @return string
+     */
+    public function getInputTokenName(): string
+    {
+        return $this->inputTokenName;
+    }
+
+    /**
+     * @param  string  $name
+     */
+    public function setInputTokenName(string $name): void
+    {
+        $this->inputTokenName = $name;
     }
 }

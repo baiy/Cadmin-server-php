@@ -2,7 +2,6 @@
 
 namespace Baiy\Cadmin\Model;
 
-use Baiy\Cadmin\Admin;
 use Baiy\Cadmin\Instance;
 
 class User extends Base
@@ -38,12 +37,12 @@ class User extends Base
         return $this->db->get(self::table(), "*", ['username' => $username]);
     }
 
-    public function loginUpdate(int $id)
+    public function loginUpdate(int $id, $ip)
     {
         return $this->db->update(
             self::table(),
             [
-                'last_login_ip'   => Admin::instance()->getAdapter()->request->clientIp(),
+                'last_login_ip'   => $ip,
                 'last_login_time' => date("Y-m-d H:i:s")
             ],
             ['id' => $id]

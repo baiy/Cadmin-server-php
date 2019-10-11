@@ -3,6 +3,7 @@
 namespace Baiy\Cadmin\System;
 
 use Baiy\Cadmin\Admin;
+use Baiy\Cadmin\Helper;
 use Baiy\Cadmin\Model\Token;
 use Baiy\Cadmin\Model\User;
 use Exception;
@@ -30,14 +31,14 @@ class Index extends Base
         $token = Token::instance()->addToken($user['id']);
 
         // 用户登录更新
-        User::instance()->loginUpdate($user['id']);
+        User::instance()->loginUpdate($user['id'], Helper::ip());
 
         return ['token' => $token];
     }
 
     public function logout()
     {
-        $token = Admin::instance()->getAdapter()->request->input(Admin::TOKEN_INPUT_NAME);
+        $token = $this->context->getRequest()->input(Admin::instance()->getInputTokenName());
         if (!empty($token)) {
             Token::instance()->deleteToken($token);
         }

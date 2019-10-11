@@ -12,6 +12,6 @@ abstract class Base
 
     public function __construct()
     {
-        $this->db = Admin::instance()->getAdapter()->db();
+        $this->db = Admin::instance()->getContext()->getDb();
     }
 }

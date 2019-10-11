@@ -2,24 +2,27 @@
 
 namespace Baiy\Cadmin\System;
 
-use Baiy\Cadmin\Admin;
+use Baiy\Cadmin\Context;
 use Baiy\Cadmin\Db;
 
 class Base
 {
     /** @var Db */
     public $db;
+    /** @var Context */
+    public $context;
 
-    public function __construct()
+    public function __construct($adminContext)
     {
-        $this->db = Admin::instance()->getAdapter()->db();
+        $this->context = $adminContext;
+        $this->db      = $this->context->getDb();
     }
 
     public function page($table, $where = [], $order = "")
     {
-        $where = $where ? ['AND' => $where] : [];
-        $offset = max(0, intval(Admin::instance()->getAdapter()->request->input('offset', 0)));
-        $pageSize = max(1, min(200, intval(Admin::instance()->getAdapter()->request->input('pageSize', 20))));
+        $where    = $where ? ['AND' => $where] : [];
+        $offset   = max(0, intval($this->context->getRequest()->input('offset', 0)));
+        $pageSize = max(1, min(200, intval($this->context->getRequest()->input('pageSize', 20))));
 
         $lists = $this->db->select(
             $table, '*',

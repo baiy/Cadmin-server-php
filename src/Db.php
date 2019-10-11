@@ -11,9 +11,8 @@ class Db extends Medoo
     {
         $startTime = microtime(true);
         $result = parent::exec($query, $map);
-        Admin::instance()->getController()->addListenSql(
+        Admin::instance()->getContext()->addListenSql(
             $this->generate($query, $map),
-            [],
             number_format((microtime(true) - $startTime), 6)
         );
         return $result;
