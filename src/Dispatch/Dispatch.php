@@ -2,7 +2,7 @@
 
 namespace Baiy\Cadmin\Dispatch;
 
-use Baiy\Cadmin\Controller;
+use Baiy\Cadmin\Context;
 
 interface Dispatch
 {
@@ -12,5 +12,5 @@ interface Dispatch
 
     public function name();
 
-    public function execute(Controller $context);
+    public function execute(Context $context);
 }
