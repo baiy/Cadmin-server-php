@@ -15,9 +15,12 @@ class Laravel58 implements Dispatch
     public function description()
     {
         return <<<description
-*类型配置说明:* `类完整签名::方法名` 例如:`\app\controller\Order::lists`
-*参数注入:* `支持laravel内置的依赖注入` `\$_GET` `\$_POST` `adminUserId(用户ID)` `adminContext(后台上下文对象)`
-*处理结果:* 
+**类型配置说明:** `类完整签名::方法名` 例如:`\App\Http\Controllers\Index::index`
+
+**参数注入:** `支持laravel内置的依赖注入` `\$_GET` `\$_POST` `adminUserId(用户ID)` `adminContext(后台上下文对象)`
+
+**处理结果:** 
+
 1. 错误:处理过程中抛出异常即可
 2. 成功:方法 `return` 数据会放在data中
 description;

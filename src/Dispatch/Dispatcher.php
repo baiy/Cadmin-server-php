@@ -53,7 +53,7 @@ class Dispatcher implements Dispatch
 
     public function description()
     {
-        return "不建议业务开发使用,尽量执行开发调度类或者使用常用框架调度类";
+        return "不建议业务开发使用,尽量自行开发调度类或者使用常用框架调度类";
     }
 
     public function name()
