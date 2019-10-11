@@ -9,7 +9,6 @@ Cadmin php 服务端
 1. 为便于给现有系统加入后台管理功能和加快新系统开发, 后台核心系统尽可能的减少依赖, 不侵入外层业务系统.
 2. 对请求处理按照请求类型可自定义`请求调度类`,便于不用业务系统使用和开发. 系统内置`Thinkphp`/`Laravel`框架的`请求调度类`
 
-> 调度类相关代码 : <https://github.com/baiy/Cadmin-server-php/tree/master/src/Dispatch>
 
 ### 安装
 ```
@@ -30,8 +29,8 @@ composer require baiy/cadmin
 $admin = \Baiy\Cadmin\Admin::instance();
 $admin->setPdo($pdo); // 设置数据库操作对象
 // $admin->setTablePrefix(); // [可选] 设置系统内置数据表前缀 设置后注意修改表名
-// $admin->registerDispatcher(); // [可选] 注册自定义请求调度对象
-// $admin->registerPassword(); // [可选] 注册自定义用户密码生成对象
+// $admin->registerDispatcher(); // [可选] 注册自定义请求调度器
+// $admin->registerPassword(); // [可选] 注册自定义用户密码生成器
 // $admin->addNoCheckLoginRequestId($id); // [可选] 无需校验权限的api
 // $admin->addOnlyLoginRequestId($id); // [可选] 只需登录即可访问的api
 // $admin->setInputActionName($name); // [可选] 设置请求标识变量名
@@ -127,5 +126,18 @@ Route::any('/api/admin/', function () {
     return response()->json($admin->run()->toArray());
 });
 ```
+### 自定义用户密码生成策略
 
+1. 实现 `Baiy\Cadmin\Password\Password` 接口
+2. 注册密码生成器,使用`\Baiy\Cadmin\Admin::registerPassword()`
 
+系统内置密码生成器: <https://github.com/baiy/Cadmin-server-php/blob/master/src/Password/PasswrodDefault.php>
+
+> 内置密码生成规则: `base64_encode(hash('sha256',hash("sha256", $password.$salt,FALSE).$salt,FALSE).'|'.$salt);`
+
+### 自定义请求调度器开发
+
+1. 实现 `\Baiy\Cadmin\Dispatch\Dispatch` 接口
+2. 注册调度器,使用`\Baiy\Cadmin\Admin::registerDispatcher()`
+
+系统内置调度器: <https://github.com/baiy/Cadmin-server-php/tree/master/src/Dispatch>

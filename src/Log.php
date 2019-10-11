@@ -4,6 +4,7 @@ namespace Baiy\Cadmin;
 
 class Log
 {
+    // 响应时间
     private $time = "";
     private $request = [];
     private $response = [];
