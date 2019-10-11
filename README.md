@@ -6,52 +6,126 @@ Cadmin php 服务端
 
 ### 特点
 
-使用适配器与外层系统进行对接, 减少外层系统的侵入. 内置`Thinkphp`/`Laravel`适配器, 对于其他php框架和系统可自行编写适配器.
+1. 为便于给现有系统加入后台管理功能和加快新系统开发, 后台核心系统尽可能的减少依赖, 不侵入外层业务系统.
+2. 对请求处理按照请求类型可自定义`请求调度类`,便于不用业务系统使用和开发. 系统内置`Thinkphp`/`Laravel`框架的`请求调度类`
+
+> 调度类相关代码 : <https://github.com/baiy/Cadmin-server-php/tree/master/src/Dispatch>
 
 ### 安装
-
 ```
 composer require baiy/cadmin
 ```
 
 ### 数据库
 
-#### 数据库结构导入
-
 详见 [数据库结构](server/db.md) 一章
 
-> 默认后台账号密码: `admin` / `123456`
-
-### 适配器
-为便于开发和减少对外层系统的侵入, 后台系统并不强依赖外层系统的数据库操作/请求处理/响应处理等基础组件, 而是使用适配器形式对外暴露相关组件设置方法.
-
-例如: 数据库操作组件后台系统使用的是[Medoo](https://medoo.in), 外部系统只需通过调用适配器的相关方法传入`PDO`对象即可
-
-适配器主要提供如下功能的适配:
-1. 获取外层系统PDO对象
-1. 后台入口路由
-1. 业务方法执行
-1. 相应输出
-
-#### 适配器开发
-> 可以[点击这里](https://github.com/baiy/Cadmin-server-php/tree/master/src/Adapter) 查看系统内置的适配器代码
-
 ### 使用方法
-> 在代码安装和数据库导入完毕后, 接下来需要将后台系统的入口代码嵌入当前系统的合适位置, 并进行相应的配置, 下面提供`Thinkphp`/`Laravel`框架具体使用方法
+> 在代码安装和数据库导入完毕后, 接下来需要将后台系统的入口代码嵌入当前系统的合适位置, 并进行相应的配置
 
-#### Thinkphp 6.0
-> 代码插入位置: `/route/app.php`
- 
+#### 入口代码说明
+
 ```php
 <?php
 $admin = \Baiy\Cadmin\Admin::instance();
-$admin->setAdapter(new \Baiy\Cadmin\Adapter\Think60\Adapter());
-//$admin->setDebug(config('app.debug')); // 系统调试标示[可选]
-//$admin->addNoCheckLoginRequestId($id); // 无需校验权限的api[可选]
-//$admin->addOnlyLoginRequestId($id); // 只需登录即可访问的api[可选]
-//$admin->setLogCallback(function(array $content){}); // 请求日志记录回调函数[可选]
-//$admin->setDbConnection($name); // 数据库连接标示[可选]
-$admin->router('/api/'); // api入口路由注册 请求记住此入口url
+$admin->setPdo($pdo); // 设置数据库操作对象
+// $admin->setTablePrefix(); // [可选] 设置系统内置数据表前缀 设置后注意修改表名
+// $admin->registerDispatcher(); // [可选] 注册自定义请求调度对象
+// $admin->registerPassword(); // [可选] 注册自定义用户密码生成对象
+// $admin->addNoCheckLoginRequestId($id); // [可选] 无需校验权限的api
+// $admin->addOnlyLoginRequestId($id); // [可选] 只需登录即可访问的api
+// $admin->setInputActionName($name); // [可选] 设置请求标识变量名
+// $admin->setInputTokenName($name); // [可选] 设置请求token变量名
+// $admin->setLogCallback(function(\Baiy\Cadmin\Log $log){}); // [可选] 请求日志记录回调函数
+
+// [可选] 运行时SQL监听 便于日志记录 需要根据实际项目使用sql监听方法进行对应调用
+// $admin->getContext()->addListenSql($sql, $time);
+
+// 获取业务处理响应结果 后续根据实际项目进行`json`输出
+$response = $admin->run();
+```
+
+#### Thinkphp 6.0
+
+##### 代码插入位置
+```
+/route/app.php
+```
+> 请求根据实际路由配置文件添加代码
+
+##### 示例代码 
+```php
+<?php
+use think\facade\Db;
+use think\facade\Log;
+use think\facade\Route;
+
+// 客户端api路由入口 请求记住此url这是提供给客户端api地址
+Route::any('/api/admin/', function (){
+    $admin = \Baiy\Cadmin\Admin::instance();
+    // 临时方案: tp 需要先查询一次数据库 才能获取到pdo对象
+    Db::connect()->execute("select 1");
+    $admin->setPdo(Db::connect()->getConnection()->getPdo()); // 设置数据库操作对象
+    $admin->registerDispatcher(new \Baiy\Cadmin\Dispatch\Thinkphp60()); // [可选] 注册内置的thinkphp调用类
+    // 其他配置省略 见上方[入口代码说明] ..... 
+
+    //  [可选] 设置请求日志记录回调函数
+    // $admin->setLogCallback(function (\Baiy\Cadmin\Log $log) {
+    //    Log::write($log->toJson(), 'notice');
+    // });
+
+    // 运行时SQL监听 便于日志记录
+    // Db::listen(function ($sql, $time, $master) use ($admin) {
+    //    $admin->getContext()->addListenSql($sql, $time);
+    // });
+
+    // 运行
+    return response($admin->run()->toArray(), 200,[],'json');
+})->allowCrossDomain();
+```
+
+#### Laravel 5.8
+
+##### 代码插入位置
+```
+/routes/api.php
+```
+> 请求根据实际路由配置文件添加代码
+>
+> 添加到`/routes/web.php` 注意添加[CSRF 白名单](https://learnku.com/docs/laravel/5.8/csrf/3892)
+
+##### 示例代码 
+```php
+<?php
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Route;
+
+// 客户端api路由入口 请求记住此url这是提供给客户端api地址
+Route::any('/api/admin/', function () {
+    // 前后端分离项目一般会有跨域问题 自行处理
+    header('Access-Control-Allow-Origin: *');
+    $admin = \Baiy\Cadmin\Admin::instance();
+    $admin->setPdo(Db::connection()->getPdo()); // 设置数据库操作对象
+    $admin->registerDispatcher(new \Baiy\Cadmin\Dispatch\Laravel58()); // [可选] 注册内置的thinkphp调用类
+    // 其他配置省略 见上方[入口代码说明] .....
+
+    // [可选] 设置请求日志记录回调函数
+    // $admin->setLogCallback(function (\Baiy\Cadmin\Log $log) {
+    //    Log::info($log->toJson());
+    // });
+
+    // 运行时SQL监听 便于日志记录
+    // Db::listen(function ($query) use ($admin) {
+    //    $admin->getContext()->addListenSql(
+    //        sprintf(str_replace("?","%s",$query->sql),...$query->bindings),
+    //        $query->time
+    //    );
+    // });
+
+    // 运行
+    return response()->json($admin->run()->toArray());
+});
 ```
 
 
