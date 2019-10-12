@@ -8,7 +8,6 @@ use Baiy\Cadmin\Model\Auth;
 use Baiy\Cadmin\Model\Request as RequestModel;
 use Baiy\Cadmin\Model\RequestRelate;
 use Exception;
-use Parsedown;
 
 class Request extends Base
 {
@@ -66,7 +65,7 @@ class Request extends Base
             return [
                 'type'        => $dispatcher->key(),
                 'name'        => $dispatcher->name(),
-                'description' => (new Parsedown())->text($dispatcher->description()),
+                'description' => $dispatcher->description(),
             ];
         }, Admin::instance()->allDispatcher()));
     }
