@@ -69,4 +69,21 @@ class User extends Base
         }
         UserModel::instance()->delete($id);
     }
+
+    // 当前用户编辑自身信息
+    public function currentSetting($adminUserId, $username, $password = "", $repeatPassword = "")
+    {
+        $update = ['username' => $username];
+        if ($password) {
+            if ($password != $repeatPassword) {
+                throw new Exception("两次输入密码不一致");
+            }
+            $update['password'] = Admin::instance()->getPassword()->hash($password);
+        }
+        $this->db->update(
+            UserModel::table(),
+            $update,
+            ['id' => $adminUserId]
+        );
+    }
 }

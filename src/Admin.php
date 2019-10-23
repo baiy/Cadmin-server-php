@@ -17,7 +17,7 @@ class Admin
     /** @var array 无需登录请求ID */
     private $noCheckLoginRequestIds = [1];
     /** @var array 仅需登录请求ID */
-    private $onlyLoginRequestIds = [2, 3];
+    private $onlyLoginRequestIds = [2, 3, 4];
     /** @var Closure 日志记录回调函数 */
     private $logCallback = null;
     /** @var string 内置数据表前缀 */
