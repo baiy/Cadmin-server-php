@@ -26,7 +26,7 @@ class User extends Base
         ];
     }
 
-    public function save($username, $status, $password = "", $id = 0)
+    public function save($username, $status,$description = "", $password = "", $id = 0)
     {
         if (empty($username)) {
             throw new Exception("用户名不能为空");
@@ -43,7 +43,7 @@ class User extends Base
         if ($id) {
             $this->db->update(
                 UserModel::table(),
-                compact('username', 'status'),
+                compact('username', 'status','description'),
                 compact('id')
             );
             if (!empty($password)) {
@@ -57,6 +57,7 @@ class User extends Base
             $this->db->insert(UserModel::table(), [
                 'username' => $username,
                 'status'   => $status,
+                'description'   => $description,
                 'password' => Admin::instance()->getPassword()->hash($password),
             ]);
         }
