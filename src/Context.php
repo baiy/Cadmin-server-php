@@ -67,7 +67,7 @@ class Context
         }
 
         // 记录日志
-        $this->logRecord($this->response);
+        $this->logRecord();
 
         return $this->response;
     }

@@ -64,7 +64,7 @@ Route::any('/api/admin/', function (){
     $admin = \Baiy\Cadmin\Admin::instance();
     // 临时方案: tp 需要先查询一次数据库 才能获取到pdo对象
     Db::connect()->execute("select 1");
-    $admin->setPdo(Db::connect()->getConnection()->getPdo()); // 设置数据库操作对象
+    $admin->setPdo(Db::connect()->getPdo()); // 设置数据库操作对象
     $admin->registerDispatcher(new \Baiy\Cadmin\Dispatch\Thinkphp60()); // [可选] 注册内置的thinkphp调用类
     // 其他配置省略 见上方[入口代码说明] ..... 
 
