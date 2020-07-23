@@ -90,7 +90,7 @@ class User extends Base
         if (empty($menuIds)) {
             return [];
         }
-        return $this->db->select(Menu::table(), '*', ['id' => $menuIds]);
+        return $this->db->select(Menu::table(), '*', ['id' => $menuIds,'ORDER' => ['sort' => 'ASC', 'id' => 'ASC']]);
     }
 
     public function getUserRequest($id)
