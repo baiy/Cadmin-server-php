@@ -61,15 +61,42 @@ class Context
 
             $this->checkAccess();
 
-            $this->response = new Response('success', '操作成功', $this->dispatch());
+            $data = $this->dispatch();
+            if ($data instanceof Response) {
+                $this->response = $data;
+            } else {
+                $this->response = $this->success('操作成功', $data);
+            }
         } catch (Throwable $e) {
-            $this->response = new Response('error', $e->getMessage(), $e->getTrace());
+            $this->response = $this->error($e->getMessage(), $e->getTrace());
         }
 
         // 记录日志
         $this->logRecord();
 
         return $this->response;
+    }
+
+    /**
+     * 成功响应
+     * @param  string  $info
+     * @param  mixed  $data
+     * @return Response
+     */
+    public function success($info, $data = [])
+    {
+        return new Response('success', $info, $data);
+    }
+
+    /**
+     * 异常响应
+     * @param  string  $info
+     * @param  mixed  $data
+     * @return Response
+     */
+    public function error($info, $data = [])
+    {
+        return new Response('error', $info, $data);
     }
 
     /**
