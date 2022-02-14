@@ -19,6 +19,11 @@ class Response
     {
         return json_encode($this->toArray(), JSON_UNESCAPED_UNICODE);
     }
+    
+    public function force()
+    {
+        return null;    
+    }
 
     public function toArray()
     {
