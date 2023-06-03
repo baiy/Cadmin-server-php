@@ -5,7 +5,7 @@ namespace Baiy\Cadmin\Dispatch;
 use Baiy\Cadmin\Context;
 use Exception;
 
-class Laravel58 implements Dispatch
+class Laravel implements Dispatch
 {
     public function key()
     {
@@ -33,12 +33,11 @@ description;
 
     public function execute(Context $context)
     {
-        $request = $context->getRequestConfig();
-        list($class, $method) = explode("::", $request['call']);
+        list($class, $method) = explode("::", $context->getRequest()['call']);
         $class = '\\'.ltrim($class, '\\');
 
         $user                  = $context->getUser();
-        $input                 = $context->getRequest()->input();
+        $input                 = $context->getContainer()->request->input();
         $input['adminUserId']  = empty($user) ? 0 : $user['id'];
         $input['adminContext'] = $context;
 

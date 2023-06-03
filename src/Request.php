@@ -5,13 +5,13 @@ namespace Baiy\Cadmin;
 class Request
 {
     /** @var string 客户端ip */
-    private $clientIp = "";
+    private string $clientIp = "";
     /** @var string 请求方法 */
-    private $method = "";
+    private string $method = "";
     /** @var string 请求完整url */
-    private $url = "";
+    private string $url = "";
     /** @var array 请求数据 */
-    private $input = [];
+    private array $input = [];
 
     /**
      * @return string
@@ -66,7 +66,7 @@ class Request
         if (!$key) {
             return $this->input;
         }
-        return isset($this->input[$key]) ? $this->input[$key] : $default;
+        return $this->input[$key] ?? $default;
     }
 
     /**
@@ -77,7 +77,7 @@ class Request
         $this->input = $input;
     }
 
-    public function toArray()
+    public function toArray(): array
     {
         return [
             'clientIp' => $this->clientIp,

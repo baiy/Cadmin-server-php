@@ -2,45 +2,28 @@
 
 namespace Baiy\Cadmin\Model;
 
-use Baiy\Cadmin\Instance;
-
 class User extends Base
 {
-    use Instance;
-    use Table;
     const STATUS_LISTS = [
         'enable'   => ['v' => 1, 'n' => '启用'],
         'disabled' => ['v' => 2, 'n' => '禁用'],
     ];
 
-    public function getByIds($ids)
-    {
-        return $ids ? $this->db->select(self::table(), '*', ['id' => $ids]) : [];
-    }
-
-    /**
-     * 是否禁用
-     * @return bool
-     */
+    // 是否禁用
     public function isDisabled($user): bool
     {
         return !$user || $user['status'] == self::STATUS_LISTS['disabled']['v'];
     }
 
-    public function getById($id)
-    {
-        return $this->db->get(self::table(), '*', ['id' => $id]);
-    }
-
     public function getByUserName($username)
     {
-        return $this->db->get(self::table(), "*", ['username' => $username]);
+        return $this->db->get($this->table, "*", ['username' => $username]);
     }
 
-    public function loginUpdate(int $id, $ip)
+    public function loginUpdate(int $id, $ip): bool
     {
-        return $this->db->update(
-            self::table(),
+        return !!$this->db->update(
+            $this->table,
             [
                 'last_login_ip'   => $ip,
                 'last_login_time' => date("Y-m-d H:i:s")
@@ -49,51 +32,51 @@ class User extends Base
         );
     }
 
-    public function getAll()
+    public function getAll(): array
     {
-        return $this->db->select(self::table(), '*');
+        return $this->db->select($this->table, '*');
     }
 
-    public function getUserAuth($id)
+    public function getUserAuth($id): array
     {
-        $groupIds = UserRelate::instance()->groupIds($id);
+        $groupIds = $this->model->userRelate()->groupIds($id);
         if (empty($groupIds)) {
             return [];
         }
-        $authIds = UserGroupRelate::instance()->authIds($groupIds);
+        $authIds = $this->model->userGroupRelate()->authIds($groupIds);
         if (empty($authIds)) {
             return [];
         }
-        return Auth::instance()->getByIds($authIds);
+        return $this->model->auth()->getByIds($authIds);
     }
 
-    public function getUserGroup($id)
+    public function getUserGroup($id): array
     {
-        $groupIds = UserRelate::instance()->groupIds($id);
+        $groupIds = $this->model->userRelate()->groupIds($id);
         if (empty($groupIds)) {
             return [];
         }
-        return $this->db->select(UserGroup::table(), '*', ['id' => $groupIds]);
+        return $this->db->select($this->model->userGroup()->table, '*', ['id' => $groupIds]);
     }
 
-    public function getUserMenu($id)
+    public function getUserMenu($id): array
     {
         $auths = $this->getUserAuth($id);
         if (empty($auths)) {
             return [];
         }
         $menuIds = $this->db->select(
-            MenuRelate::table(),
+            $this->model->menuRelate()->table,
             'admin_menu_id',
             ['admin_auth_id' => array_column($auths, 'id')]
         );
         if (empty($menuIds)) {
             return [];
         }
-        return $this->db->select(Menu::table(), '*', ['id' => $menuIds,'ORDER' => ['sort' => 'ASC', 'id' => 'ASC']]);
+        return $this->db->select($this->model->menu()->table, '*', ['id' => $menuIds, 'ORDER' => ['sort' => 'ASC', 'id' => 'ASC']]);
     }
 
-    public function getUserRequest($id)
+    public function getUserRequest($id): array
     {
         $auths = $this->getUserAuth($id);
         if (empty($auths)) {
@@ -101,19 +84,13 @@ class User extends Base
         }
 
         $requestIds = $this->db->select(
-            RequestRelate::table(), '
+            $this->model->requestRelate()->table, '
             admin_request_id',
             ['admin_auth_id' => array_column($auths, 'id')]
         );
         if (empty($requestIds)) {
             return [];
         }
-        return $this->db->select(Request::table(), '*', ['id' => $requestIds]);
-    }
-
-    public function delete($id)
-    {
-        $this->db->delete(self::table(), ['id' => $id]);
-        $this->db->delete(UserRelate::table(), ['admin_user_id' => $id]);
+        return $this->db->select($this->model->request()->table, '*', ['id' => $requestIds]);
     }
 }

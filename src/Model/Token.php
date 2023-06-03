@@ -2,43 +2,59 @@
 
 namespace Baiy\Cadmin\Model;
 
-use Baiy\Cadmin\Instance;
 use Exception;
 
 class Token extends Base
 {
-    use Instance;
-    use Table;
-
-    public function deleteToken(string $token)
+    public function deleteToken(string $token): bool
     {
-        return $this->db->delete(self::table(), ['token' => $token]);
+        return !!$this->db->delete($this->table, ['token' => $token]);
     }
 
-    public function clearToken()
+    public function clearToken(): bool
     {
-        return $this->db->delete(self::table(), ['expire_time[<]' => date('Y-m-d H:i:s')]);
+        return !!$this->db->delete($this->table, ['expire_time[<]' => date('Y-m-d H:i:s')]);
     }
 
-    public function addToken(int $userId)
+    public function addToken(int $userId): array
     {
+        $expireTimeUnix = $this->getNewExpireTimeUnix();
+
         $token = md5($userId.'|'.time().'|'.mt_rand(1000, 9999));
-        if (!$this->db->insert(self::table(), [
+        if (!$this->db->insert($this->table, [
             "admin_user_id" => $userId,
-            "expire_time"   => date('Y-m-d H:i:s', time() + 86400 * 2),
+            "expire_time"   => date('Y-m-d H:i:s', $expireTimeUnix),
             "token"         => $token,
         ])) {
             throw new Exception("登录凭证生成失败");
         }
-        return $token;
+        return [
+            'token'   => $token,
+            'expire'  => $expireTimeUnix,
+            'user_id' => $userId,
+        ];
     }
 
-    public function getUserId(string $token)
+    public function updateToken($token): int
     {
-        $adminUserId = $this->db->get(self::table(), 'admin_user_id', [
+        $expireTimeUnix = $this->getNewExpireTimeUnix();
+        if (!$this->db->update($this->table, ['expire_time' => date('Y-m-d H:i:s', $expireTimeUnix)], ['token' => $token])) {
+            return 0;
+        }
+        return $expireTimeUnix;
+    }
+
+    public function getUserId(string $token): int
+    {
+        $adminUserId = $this->db->get($this->table, 'admin_user_id', [
             'expire_time[>]' => date('Y-m-d H:i:s'),
             'token'          => $token,
         ]);
-        return $adminUserId ?: 0;
+        return intval($adminUserId ?: 0);
+    }
+
+    private function getNewExpireTimeUnix(): int
+    {
+        return time() + (86400 * 2);
     }
 }

@@ -2,40 +2,33 @@
 
 namespace Baiy\Cadmin\System;
 
-use Baiy\Cadmin\Admin;
-use Baiy\Cadmin\Model\Auth as AuthModel;
-use Baiy\Cadmin\Model\Menu;
-use Baiy\Cadmin\Model\MenuRelate;
-use Baiy\Cadmin\Model\Request;
-use Baiy\Cadmin\Model\RequestRelate;
-use Baiy\Cadmin\Model\UserGroup;
-use Baiy\Cadmin\Model\UserGroupRelate;
+use Baiy\Cadmin\Context;
 use Exception;
 use PDO;
 
 class Auth extends Base
 {
-    public function lists($keyword = "")
+    public function lists($keyword = ""): array
     {
         $where = [];
         if (!empty($keyword)) {
             $where['name[~]'] = $keyword;
         }
 
-        list($lists, $total) = $this->page(AuthModel::table(), $where, ['id' => 'DESC']);
+        list($lists, $total) = $this->page($this->model->auth()->table, $where, ['id' => 'DESC']);
 
         return [
             'lists' => array_map(function ($item) {
-                $item['request'] = Request::instance()->getByIds(
-                    RequestRelate::instance()->requestIds($item['id'])
+                $item['request'] = $this->model->request()->getByIds(
+                    $this->model->requestRelate()->requestIds($item['id'])
                 );
 
-                $item['menu'] = Menu::instance()->getByIds(
-                    MenuRelate::instance()->menuIds($item['id'])
+                $item['menu'] = $this->model->menu()->getByIds(
+                    $this->model->menuRelate()->menuIds($item['id'])
                 );
 
-                $item['userGroup'] = UserGroup::instance()->getByIds(
-                    UserGroupRelate::instance()->userGroupIds($item['id'])
+                $item['userGroup'] = $this->model->userGroup()->getByIds(
+                    $this->model->userGroupRelate()->userGroupIds($item['id'])
                 );
                 return $item;
             }, $lists),
@@ -43,30 +36,30 @@ class Auth extends Base
         ];
     }
 
-    public function save($name, $description = "", $id = 0)
+    public function save($name, $description = "", $id = 0): void
     {
         if (empty($name)) {
             throw new Exception("权限组名称不能为空");
         }
         if (empty($id)) {
-            $this->db->insert(AuthModel::table(), compact('name', 'description'));
+            $this->db->insert($this->model->auth()->table, compact('name', 'description'));
         } else {
-            $this->db->update(AuthModel::table(), compact('name', 'description'), compact('id'));
+            $this->db->update($this->model->auth()->table, compact('name', 'description'), compact('id'));
         }
     }
 
-    public function remove($id)
+    public function remove($id): void
     {
         if (empty($id)) {
             throw new Exception("参数错误");
         }
-        AuthModel::instance()->delete($id);
+        $this->model->auth()->delete($id);
     }
 
     /**
      * 获取请求权限分配情况
      */
-    public function getRequest($id, $keyword = '')
+    public function getRequest($id, $keyword = ''): array
     {
         $where = [];
         if (!empty($keyword)) {
@@ -76,18 +69,17 @@ class Auth extends Base
             ];
         }
         $where['id[!]'] = array_merge(
-            $this->db->select(RequestRelate::table(), 'admin_request_id', ['admin_auth_id' => $id]),
-            Admin::instance()->getOnlyLoginRequestIds(), // 过滤无需分配的请求
-            Admin::instance()->getNoCheckLoginRequestIds() // 过滤无需分配的请求
+            [0],
+            $this->db->select($this->model->requestRelate()->table, 'admin_request_id', ['admin_auth_id' => $id]),
         );
 
-        list($noAssign, $total) = $this->page(Request::table(), $where, ['id' => 'DESC']);
+        list($noAssign, $total) = $this->page($this->model->request()->table, $where, ['id' => 'DESC']);
         $assign = $this->db->query(
             sprintf(
                 "SELECT req.* FROM %s as req INNER JOIN %s as rel ON rel.admin_request_id = req.id ".
                 "WHERE rel.admin_auth_id = '%s' order by rel.id DESC",
-                Request::table(),
-                RequestRelate::table(),
+                $this->model->request()->table,
+                $this->model->requestRelate()->table,
                 $id
             )
         )->fetchAll(PDO::FETCH_ASSOC);
@@ -100,10 +92,10 @@ class Auth extends Base
     /**
      * 请求分配
      */
-    public function assignRequest($id, $requestId)
+    public function assignRequest($id, $requestId): void
     {
         $this->db->insert(
-            RequestRelate::table(),
+            $this->model->requestRelate()->table,
             ['admin_auth_id' => $id, 'admin_request_id' => $requestId]
         );
     }
@@ -111,10 +103,10 @@ class Auth extends Base
     /**
      * 移除请求分配
      */
-    public function removeRequest($id, $requestId)
+    public function removeRequest($id, $requestId): void
     {
         $this->db->delete(
-            RequestRelate::table(),
+            $this->model->requestRelate()->table,
             ['admin_auth_id' => $id, 'admin_request_id' => $requestId]
         );
     }
@@ -122,25 +114,26 @@ class Auth extends Base
     /**
      * 获取用户组权限分配情况
      */
-    public function getUserGroup($id, $keyword = '')
+    public function getUserGroup($id, $keyword = ''): array
     {
         $where = [];
         if (!empty($keyword)) {
             $where['name[~]'] = $keyword;
         }
-        // 已分配权限
-        $existIds = $this->db->select(UserGroupRelate::table(), 'admin_user_group_id', ['admin_auth_id' => $id]);
-        if ($existIds) {
-            $where['id[!]'] = $existIds;
-        }
 
-        list($noAssign, $total) = $this->page(UserGroup::table(), $where, ['id' => 'DESC']);
+        // 过滤已分配和超级管理员组
+        $where['id[!]'] = array_merge(
+            [Context::USER_GROUP_ADMINISTRATOR_ID],
+            $this->db->select($this->model->userGroupRelate()->table, 'admin_user_group_id', ['admin_auth_id' => $id])
+        );
+
+        list($noAssign, $total) = $this->page($this->model->userGroup()->table, $where, ['id' => 'DESC']);
         $assign = $this->db->query(
             sprintf(
                 "SELECT ug.* FROM %s as ug INNER JOIN %s as rel ON rel.admin_user_group_id = ug.id ".
                 "WHERE rel.admin_auth_id = '%s' order by rel.id DESC",
-                UserGroup::table(),
-                UserGroupRelate::table(),
+                $this->model->userGroup()->table,
+                $this->model->userGroupRelate()->table,
                 $id
             )
         )->fetchAll(PDO::FETCH_ASSOC);
@@ -153,9 +146,9 @@ class Auth extends Base
     /**
      * 用户组分配
      */
-    public function assignUserGroup($id, $userGroupId)
+    public function assignUserGroup($id, $userGroupId): void
     {
-        $this->db->insert(UserGroupRelate::table(), [
+        $this->db->insert($this->model->userGroupRelate()->table, [
             'admin_auth_id'       => $id,
             'admin_user_group_id' => $userGroupId,
         ]);
@@ -164,10 +157,10 @@ class Auth extends Base
     /**
      * 移除用户组分配
      */
-    public function removeUserGroup($id, $userGroupId)
+    public function removeUserGroup($id, $userGroupId): void
     {
         $this->db->delete(
-            UserGroupRelate::table(),
+            $this->model->userGroupRelate()->table,
             ['admin_auth_id' => $id, 'admin_user_group_id' => $userGroupId]
         );
     }
@@ -175,27 +168,27 @@ class Auth extends Base
     /**
      * 获取菜单权限分配情况
      */
-    public function getMenu($id)
+    public function getMenu($id): array
     {
-        $existIds = $this->db->select(MenuRelate::table(), 'admin_menu_id', ['admin_auth_id' => $id]);
+        $existIds = $this->db->select($this->model->menuRelate()->table, 'admin_menu_id', ['admin_auth_id' => $id]);
         return array_map(function ($item) use ($existIds) {
             $item['checked'] = in_array($item['id'], $existIds);
             return $item;
-        }, Menu::instance()->all());
+        }, $this->model->menu()->all());
     }
 
-    public function assignMenu($id, $menuIds = [])
+    public function assignMenu($id, $menuIds = []): void
     {
         if (empty($menuIds)) {
             // 清空
-            $this->db->delete(MenuRelate::table(), ['admin_auth_id' => $id]);
+            $this->db->delete($this->model->menuRelate()->table, ['admin_auth_id' => $id]);
             return;
         }
-        $existIds = $this->db->select(MenuRelate::table(), 'admin_menu_id', ['admin_auth_id' => $id]);
+        $existIds = $this->db->select($this->model->menuRelate()->table, 'admin_menu_id', ['admin_auth_id' => $id]);
         // 删除
         $delMenuIds = array_diff($existIds, $menuIds);
         if (!empty($delMenuIds)) {
-            $this->db->delete(MenuRelate::table(), [
+            $this->db->delete($this->model->menuRelate()->table, [
                 'admin_auth_id' => $id,
                 'admin_menu_id' => $delMenuIds,
             ]);
@@ -204,7 +197,7 @@ class Auth extends Base
         $addMenuIds = array_diff($menuIds, $existIds);
         if (!empty($addMenuIds)) {
             foreach ($addMenuIds as $menuId) {
-                $this->db->insert(MenuRelate::table(), [
+                $this->db->insert($this->model->menuRelate()->table, [
                     'admin_menu_id' => $menuId,
                     'admin_auth_id' => $id
                 ]);

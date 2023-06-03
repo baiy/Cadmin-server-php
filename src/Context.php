@@ -2,57 +2,46 @@
 
 namespace Baiy\Cadmin;
 
-use Baiy\Cadmin\Model\Request as RequestMode;
-use Baiy\Cadmin\Model\RequestRelate;
-use Baiy\Cadmin\Model\Token;
-use Baiy\Cadmin\Model\User;
-use Baiy\Cadmin\Model\UserGroupRelate;
-use Baiy\Cadmin\Model\UserRelate;
 use Exception;
 use Throwable;
+use Psr\Http\Message\ResponseInterface;
+use Laminas\Diactoros\ResponseFactory;
 
 class Context
 {
-    /** @var Admin */
-    private $admin;
-    /** @var Request */
-    private $request;
-    /** @var Response */
-    private $response;
+    private Container $container;
 
+    // 游客用户权限
+    const AUTH_GUEST_USER_ID = 1;
+    // 登录用户权限
+    const AUTH_LOGIN_USER_ID = 2;
+    // 超级管理员用户组
+    const USER_GROUP_ADMINISTRATOR_ID = 1;
+
+    private ResponseInterface $response;
     // 监听sql执行数据
-    private $listenSql = [];
+    private array $listenSql = [];
     // 请求配置信息
-    private $requestConfig = [];
+    private array $request = [];
     // 当前用户信息
-    private $user = [];
+    private array $user = [];
+    // token
+    private string $token = "";
 
-    /** @var Db 数据库操作对象 */
-    private $db;
-
-    public function __construct(Admin $admin)
+    public function __construct(Container $container)
     {
-        $this->admin = $admin;
-
-        $this->initializeRequest();
-
-        // 初始化数据库对象
-        $this->db = new Db(['database_type' => 'mysql', 'pdo' => $this->admin->getPdo()]);
+        $this->container = $container;
     }
 
-    private function initializeRequest()
+    public function getContainer(): Container
     {
-        $this->request = new Request();
-        $this->request->setClientIp(Helper::ip());
-        $this->request->setMethod(strtoupper($_SERVER['REQUEST_METHOD']));
-        $this->request->setUrl(Helper::url());
-        $this->request->setInput(array_merge($_GET ?? [], $_POST ?? []));
+        return $this->container;
     }
 
     /**
      * 入口
      */
-    public function run(): Response
+    public function run(): ResponseInterface
     {
         try {
             $this->initRequest();
@@ -62,13 +51,20 @@ class Context
             $this->checkAccess();
 
             $data = $this->dispatch();
-            if ($data instanceof Response) {
+            if ($data instanceof ResponseInterface) {
                 $this->response = $data;
             } else {
-                $this->response = $this->success('操作成功', $data);
+                $this->response = $this->response('success', '操作成功', $data);
             }
         } catch (Throwable $e) {
-            $this->response = $this->error($e->getMessage(), $e->getTrace());
+            $this->response = $this->response('error', $e->getMessage(), $e->getTrace());
+        }
+        if ($this->token) {
+            // 延长 token 过期时间, 并添加到响应
+            $this->response = $this->response->withHeader(
+                'Cadmin-Token-Expire-Time',
+                $this->container->model->token()->updateToken($this->token)
+            );
         }
 
         // 记录日志
@@ -77,33 +73,12 @@ class Context
         return $this->response;
     }
 
-    /**
-     * 成功响应
-     * @param  string  $info
-     * @param  mixed  $data
-     * @return Response
-     */
-    public function success($info, $data = [])
-    {
-        return new Response('success', $info, $data);
-    }
-
-    /**
-     * 异常响应
-     * @param  string  $info
-     * @param  mixed  $data
-     * @return Response
-     */
-    public function error($info, $data = [])
-    {
-        return new Response('error', $info, $data);
-    }
 
     /**
      * @param  string  $sql  执行Sql
      * @param  mixed  $time  执行时间
      */
-    public function addListenSql($sql, $time): void
+    public function addListenSql(string $sql, mixed $time): void
     {
         $this->listenSql[] = compact('sql', 'time');
     }
@@ -113,36 +88,14 @@ class Context
         return $this->user;
     }
 
-    /**
-     * @return array
-     */
-    public function getRequestConfig(): array
-    {
-        return $this->requestConfig;
-    }
-
-    /**
-     * @return Request
-     */
-    public function getRequest(): Request
+    public function getRequest(): array
     {
         return $this->request;
     }
 
-    /**
-     * @return Response
-     */
-    public function getResponse(): Response
+    public function getResponse(): ResponseInterface
     {
         return $this->response;
-    }
-
-    /**
-     * @return Db
-     */
-    public function getDb(): Db
-    {
-        return $this->db;
     }
 
     /**
@@ -157,41 +110,42 @@ class Context
      * 初始化请求数据
      * @throws Exception
      */
-    private function initRequest()
+    private function initRequest(): void
     {
-        $action = $this->getRequest()->input(Admin::instance()->getInputActionName());
+        $action = $this->container->request->input($this->container->admin->getInputActionName());
         if (empty($action)) {
-            throw new Exception("action参数错误");
+            throw new Exception("action 参数错误");
         }
 
-        $request = RequestMode::instance()->getByAction($action);
+        $request = $this->container->model->request()->getByAction($action);
         if (empty($request)) {
             throw new Exception("action 不存在");
         }
-        $this->requestConfig = $request;
+        $this->request = $request;
     }
 
     /**
      * 初始化请求数据
      * @throws Exception
      */
-    private function initUser()
+    private function initUser(): void
     {
-        $token = $this->getRequest()->input(Admin::instance()->getInputTokenName());
+        $token = $this->container->request->input($this->container->admin->getInputTokenName());
         if (empty($token)) {
             return;
         }
 
-        $userId = Token::instance()->getUserId($token);
+        $userId = $this->container->model->token()->getUserId($token);
         if (empty($userId)) {
             return;
         }
 
-        $user = User::instance()->getById($userId);
+        $user = $this->container->model->user()->getById($userId);
         if (!empty($user)) {
             // 移除密码字段
             unset($user['password']);
-            $this->user = $user;
+            $this->user  = $user;
+            $this->token = $token;
         }
     }
 
@@ -199,10 +153,15 @@ class Context
      * 检查权限
      * @throws Exception
      */
-    private function checkAccess()
+    private function checkAccess(): void
     {
-        $requestId = $this->requestConfig['id'];
-        if (in_array($requestId, Admin::instance()->getNoCheckLoginRequestIds())) {
+        $authIds = $this->container->model->requestRelate()->authIds($this->request['id'] ?? "");
+        if (empty($authIds)) {
+            throw new Exception("请求未分配权限组");
+        }
+
+        if (in_array(self::AUTH_GUEST_USER_ID, $authIds)) {
+            // 游客可访问
             return;
         }
 
@@ -210,37 +169,53 @@ class Context
             throw new Exception("未登录系统");
         }
 
-        if (User::instance()->isDisabled($this->user)) {
+        if ($this->container->model->user()->isDisabled($this->user)) {
             throw new Exception("用户已被禁用");
         }
 
-        if (in_array($requestId, Admin::instance()->getOnlyLoginRequestIds())) {
+        if (in_array(self::AUTH_LOGIN_USER_ID, $authIds)) {
+            // 登录可访问
             return;
         }
 
-        $userGroupIds = UserRelate::instance()->groupIds($this->user['id']);
+        $userGroupIds = $this->container->model->userRelate()->groupIds($this->user['id']);
         if (empty($userGroupIds)) {
             throw new Exception("用户未分配用户组");
         }
 
-        $authIds = RequestRelate::instance()->authIds($this->requestConfig['id']);
-        if (empty($authIds)) {
-            throw new Exception("请求未分配权限组");
+        if (in_array(self::USER_GROUP_ADMINISTRATOR_ID, $userGroupIds)) {
+            // 超级管理员
+            return;
         }
 
-        if (!UserGroupRelate::instance()->check($userGroupIds, $authIds)) {
+        if (!$this->container->model->userGroupRelate()->check($userGroupIds, $authIds)) {
             throw new Exception("暂无权限");
         }
     }
 
     private function dispatch()
     {
-        $dispatcher = Admin::instance()->getDispatcher($this->requestConfig['type']);
+        $dispatcher = $this->container->admin->getDispatcher($this->request['type'] ?? "");
         return $dispatcher->execute($this);
     }
 
-    private function logRecord()
+    private function logRecord(): void
     {
-        Admin::instance()->log(new Log($this));
+        $callback = $this->container->admin->getLogCallback();
+        if ($callback instanceof \Closure) {
+            $callback(new Log($this));
+        }
+    }
+
+    private function response($status, $info, $data): ResponseInterface
+    {
+        $response = (new ResponseFactory())->createResponse();
+        $response = $response->withStatus(200);
+        $response = $response->withHeader('Content-Type', 'application/json');
+        return $response->withBody(
+            \Laminas\Diactoros\StreamFactory::createStream(
+                json_encode(compact('status', 'info', 'data'), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
+            )
+        );
     }
 }

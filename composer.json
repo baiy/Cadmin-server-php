@@ -9,8 +9,9 @@
     "homepage": "https://github.com/baiy/Cadmin-service-php",
     "license": "MIT",
     "require": {
-        "php": ">=7.1.3",
-        "catfan/medoo": "^1.7"
+        "php": ">=8.0",
+        "psr/http-message": "^2.0",
+        "laminas/laminas-diactoros": "^3.0"
     },
     "autoload": {
         "psr-4": {

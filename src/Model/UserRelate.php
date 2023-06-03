@@ -2,24 +2,21 @@
 
 namespace Baiy\Cadmin\Model;
 
-use Baiy\Cadmin\Instance;
-
 class UserRelate extends Base
 {
-    use Instance;
-    use Table;
 
-    public function groupIds($id)
+
+    public function groupIds($id): array
     {
-        return $this->db->select(self::table(), 'admin_user_group_id', [
+        return $this->db->select($this->table, 'admin_user_group_id', [
             'admin_user_id' => $id
-        ]) ?: [];
+        ]);
     }
 
-    public function userIds($id)
+    public function userIds($id): array
     {
-        return $this->db->select(self::table(), 'admin_user_id', [
+        return $this->db->select($this->table, 'admin_user_id', [
             'admin_user_group_id' => $id
-        ]) ?: [];
+        ]);
     }
 }

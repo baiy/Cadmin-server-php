@@ -11,9 +11,7 @@ class Dispatcher implements Dispatch
 {
     public function execute(Context $context)
     {
-        $request = $context->getRequestConfig();
-
-        $lists  = explode(".", $request['call']);
+        $lists  = explode(".", $context->getRequest()['call'] ?? "");
         $class  = '\\'.ltrim(implode("\\", array_slice($lists, 0, count($lists) - 1)), '\\');
         $method = $lists[count($lists) - 1];
 
@@ -26,7 +24,7 @@ class Dispatcher implements Dispatch
         }
 
         $user                  = $context->getUser();
-        $input                 = $context->getRequest()->input();
+        $input                 = $context->getContainer()->request->input();
         $input['adminUserId']  = empty($user) ? 0 : $user['id'];
         $input['adminContext'] = $context;
 

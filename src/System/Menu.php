@@ -2,34 +2,33 @@
 
 namespace Baiy\Cadmin\System;
 
-use Baiy\Cadmin\Model\Menu as MenuModel;
 use Exception;
 
 class Menu extends Base
 {
-    public function lists()
+    public function lists(): array
     {
-        return MenuModel::instance()->all();
+        return $this->model->menu()->all();
     }
 
-    public function sort($menus)
+    public function sort($menus): void
     {
         foreach ($menus as $menu) {
             $this->db->update(
-                MenuModel::table(),
+                $this->model->menu()->table,
                 ['sort' => $menu['sort']],
                 ['id' => $menu['id']]
             );
         }
     }
 
-    public function save($parent_id, $name, $url = "", $icon = "", $description = "", $id = 0)
+    public function save($parent_id, $name, $url = "", $icon = "", $description = "", $admin_menu_group_id = "0", $id = 0): void
     {
         if (empty($name)) {
             throw new Exception("菜单名称不能为空");
         }
         if (!empty($parent_id)) {
-            $parent = $this->db->get(MenuModel::table(), "*", ['id' => $parent_id]);
+            $parent = $this->db->get($this->model->menu()->table, "*", ['id' => $parent_id]);
             if (empty($parent)) {
                 throw new Exception("父菜单不存在");
             }
@@ -37,27 +36,28 @@ class Menu extends Base
                 throw new Exception("父菜单不是目录类型菜单");
             }
         }
+        $admin_menu_group_id = $url ? $admin_menu_group_id : 0;
         if ($id) {
             $this->db->update(
-                MenuModel::table(),
-                compact('name', 'parent_id', 'url', 'icon', 'description'),
+                $this->model->menu()->table,
+                compact('name', 'parent_id', 'url', 'icon', 'description', 'admin_menu_group_id'),
                 compact('id')
             );
         } else {
             // 计算排序值
             $sort = $this->db->get(
-                MenuModel::table(), 'sort', ['AND' => compact('parent_id'), 'ORDER' => ['sort' => 'DESC']]
+                $this->model->menu()->table, 'sort', ['AND' => compact('parent_id'), 'ORDER' => ['sort' => 'DESC']]
             );
             $sort = $sort ? $sort + 1 : 0;
-            $this->db->insert(MenuModel::table(), compact('name', 'parent_id', 'url', 'icon', 'description', 'sort'));
+            $this->db->insert($this->model->menu()->table, compact('name', 'parent_id', 'url', 'icon', 'description', 'sort', 'admin_menu_group_id'));
         }
     }
 
-    public function remove($id)
+    public function remove($id): void
     {
         if (empty($id)) {
             throw new Exception("参数错误");
         }
-        MenuModel::instance()->delete($id);
+        $this->model->menu()->delete($id);
     }
 }

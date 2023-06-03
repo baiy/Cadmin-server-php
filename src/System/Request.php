@@ -2,16 +2,12 @@
 
 namespace Baiy\Cadmin\System;
 
-use Baiy\Cadmin\Admin;
 use Baiy\Cadmin\Dispatch\Dispatch;
-use Baiy\Cadmin\Model\Auth;
-use Baiy\Cadmin\Model\Request as RequestModel;
-use Baiy\Cadmin\Model\RequestRelate;
 use Exception;
 
 class Request extends Base
 {
-    public function lists($keyword = "", $type = "")
+    public function lists($keyword = "", $type = ""): array
     {
         $where = [];
         if (!empty($keyword)) {
@@ -21,12 +17,12 @@ class Request extends Base
             $where['type'] = $type;
         }
 
-        list($lists, $total) = $this->page(RequestModel::table(), $where, ['id' => 'DESC']);
+        list($lists, $total) = $this->page($this->model->request()->table, $where, ['id' => 'DESC']);
 
         return [
             'lists' => array_map(function ($item) {
-                $item['auth'] = Auth::instance()->getByIds(
-                    RequestRelate::instance()->authIds($item['id'])
+                $item['auth'] = $this->model->auth()->getByIds(
+                    $this->model->requestRelate()->authIds($item['id'])
                 );
                 return $item;
             }, $lists),
@@ -34,7 +30,7 @@ class Request extends Base
         ];
     }
 
-    public function save($name, $action, $type, $call, $id = "")
+    public function save($name, $action, $type, $call, $id = ""): void
     {
         if (empty($name) || empty($action) || empty($call) || empty($type)) {
             throw new Exception("参数错误");
@@ -42,24 +38,24 @@ class Request extends Base
 
         if ($id) {
             $this->db->update(
-                RequestModel::table(),
+                $this->model->request()->table,
                 compact('name', 'action', 'type', 'call'),
                 compact('id')
             );
         } else {
-            $this->db->insert(RequestModel::table(), compact('name', 'action', 'type', 'call'));
+            $this->db->insert($this->model->request()->table, compact('name', 'action', 'type', 'call'));
         }
     }
 
-    public function remove($id)
+    public function remove($id): void
     {
         if (empty($id)) {
             throw new Exception("参数错误");
         }
-        RequestModel::instance()->delete($id);
+        $this->model->request()->delete($id);
     }
 
-    public function type()
+    public function type(): array
     {
         return array_values(array_map(function (Dispatch $dispatcher) {
             return [
@@ -67,6 +63,6 @@ class Request extends Base
                 'name'        => $dispatcher->name(),
                 'description' => $dispatcher->description(),
             ];
-        }, Admin::instance()->allDispatcher()));
+        }, $this->container->admin->allDispatcher()));
     }
 }

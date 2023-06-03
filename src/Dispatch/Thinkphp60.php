@@ -34,12 +34,12 @@ description;
 
     public function execute(Context $context)
     {
-        $request = $context->getRequestConfig();
+        $request = $context->getRequest();
         list($class, $method) = explode("::", $request['call']);
         $class = '\\'.ltrim($class, '\\');
 
         $user                  = $context->getUser();
-        $input                 = $context->getRequest()->input();
+        $input                 = $context->getContainer()->request->input();
         $input['adminUserId']  = empty($user) ? 0 : $user['id'];
         $input['adminContext'] = $context;
 
