@@ -8,12 +8,12 @@ use ReflectionMethod;
 
 class Thinkphp60 implements Dispatch
 {
-    public function key()
+    public function key(): string
     {
         return "thinkphp";
     }
 
-    public function description()
+    public function description(): string
     {
         return <<<description
 **类型配置说明:** `类完整签名::方法名` 例如:`\app\controller\Order::lists`
@@ -27,12 +27,12 @@ class Thinkphp60 implements Dispatch
 description;
     }
 
-    public function name()
+    public function name(): string
     {
         return "thinkphp";
     }
 
-    public function execute(Context $context)
+    public function execute(Context $context): mixed
     {
         $request = $context->getRequest();
         list($class, $method) = explode("::", $request['call']);

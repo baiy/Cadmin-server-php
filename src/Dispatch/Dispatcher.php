@@ -9,7 +9,7 @@ use ReflectionParameter;
 
 class Dispatcher implements Dispatch
 {
-    public function execute(Context $context)
+    public function execute(Context $context):mixed
     {
         $lists  = explode(".", $context->getRequest()['call'] ?? "");
         $class  = '\\'.ltrim(implode("\\", array_slice($lists, 0, count($lists) - 1)), '\\');
@@ -44,17 +44,17 @@ class Dispatcher implements Dispatch
         );
     }
 
-    public function key()
+    public function key():string
     {
         return "default";
     }
 
-    public function description()
+    public function description():string
     {
         return "不建议业务开发使用,尽量自行开发调度类或者使用常用框架调度类";
     }
 
-    public function name()
+    public function name():string
     {
         return "默认";
     }
@@ -66,7 +66,7 @@ class Dispatcher implements Dispatch
      * @param  array  $inject
      * @return array
      */
-    private function getParameters($parameters, $inject = [])
+    private function getParameters($parameters, $inject = []): array
     {
         $returnParameters = [];
         foreach ($parameters as $parameter) {
@@ -80,7 +80,7 @@ class Dispatcher implements Dispatch
      * @param  array  $inject
      * @return mixed
      */
-    private function handlerParameter(ReflectionParameter $parameter, $inject = [])
+    private function handlerParameter(ReflectionParameter $parameter, $inject = []): mixed
     {
         // 注入参数
         if (isset($inject[$parameter->getName()])) {

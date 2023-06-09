@@ -5,7 +5,6 @@ namespace Baiy\Cadmin;
 use Exception;
 use Throwable;
 use Psr\Http\Message\ResponseInterface;
-use Laminas\Diactoros\ResponseFactory;
 
 class Context
 {
@@ -209,13 +208,11 @@ class Context
 
     private function response($status, $info, $data): ResponseInterface
     {
-        $response = (new ResponseFactory())->createResponse();
-        $response = $response->withStatus(200);
-        $response = $response->withHeader('Content-Type', 'application/json');
-        return $response->withBody(
-            \Laminas\Diactoros\StreamFactory::createStream(
-                json_encode(compact('status', 'info', 'data'), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
+        return Helper::createResponse(
+            json_encode(
+                compact('status', 'info', 'data'),
+                JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
             )
-        );
+        )->withHeader('Content-Type', 'application/json');
     }
 }

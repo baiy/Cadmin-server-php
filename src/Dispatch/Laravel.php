@@ -7,12 +7,12 @@ use Exception;
 
 class Laravel implements Dispatch
 {
-    public function key()
+    public function key(): string
     {
         return "laravel";
     }
 
-    public function description()
+    public function description(): string
     {
         return <<<description
 **类型配置说明:** `类完整签名::方法名` 例如:`\App\Http\Controllers\Index::index`
@@ -26,12 +26,12 @@ class Laravel implements Dispatch
 description;
     }
 
-    public function name()
+    public function name(): string
     {
         return "laravel";
     }
 
-    public function execute(Context $context)
+    public function execute(Context $context): mixed
     {
         list($class, $method) = explode("::", $context->getRequest()['call']);
         $class = '\\'.ltrim($class, '\\');

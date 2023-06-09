@@ -6,11 +6,11 @@ use Baiy\Cadmin\Context;
 
 interface Dispatch
 {
-    public function key();
+    public function key(): string;
 
-    public function description();
+    public function description(): string;
 
-    public function name();
+    public function name(): string;
 
-    public function execute(Context $context);
+    public function execute(Context $context): mixed;
 }

@@ -2,7 +2,10 @@
 
 namespace Baiy\Cadmin;
 
+use Laminas\Diactoros\StreamFactory;
+use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Laminas\Diactoros\ResponseFactory;
 
 class Helper
 {
@@ -33,5 +36,13 @@ class Helper
         }
 
         return $clientIp ?: "";
+    }
+
+    // 创建标准psr响应
+    public static function createResponse(string $content, int $status = 200): ResponseInterface
+    {
+        return (new ResponseFactory())->createResponse()->withStatus($status)->withBody(
+            StreamFactory::createStream($content)
+        );
     }
 }
