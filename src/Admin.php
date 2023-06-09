@@ -39,7 +39,7 @@ class Admin
      */
     private Password $password;
 
-    private function __construct(PDO $pdo, ServerRequestInterface $request)
+    public function __construct(PDO $pdo, ServerRequestInterface $request)
     {
         // 注册系统默认调用器
         $this->registerDispatcher(new Dispatcher());

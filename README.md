@@ -60,10 +60,10 @@ use think\facade\Route;
 Route::any('/api/admin/', function (){
     // 临时方案: tp 需要先查询一次数据库 才能获取到pdo对象
     Db::connect()->execute("select 1");
-    // 自行 PSR-7 请求对象构建
+    // 自行构建 PSR-7 请求对象
     $request = \Laminas\Diactoros\ServerRequestFactory::fromGlobals()
     $admin = new \Baiy\Cadmin\Admin(Db::connect()->getPdo(), $request);
-    $admin->registerDispatcher(new \Baiy\Cadmin\Dispatch\Thinkphp60()); // [可选] 注册内置的thinkphp调用类
+    $admin->registerDispatcher(new \Baiy\Cadmin\Dispatch\Thinkphp60()); // [可选] 注册内置调度类
     // 其他配置省略 见上方[入口代码说明] ..... 
 
     //  [可选] 设置请求日志记录回调函数
@@ -106,7 +106,7 @@ Route::any('/api/admin/', function (ServerRequestInterface $request) {
     // 前后端分离项目一般会有跨域问题 自行处理
     header('Access-Control-Allow-Origin: *');
     $admin = new \Baiy\Cadmin\Admin(Db::connection()->getPdo(), $request);
-    $admin->registerDispatcher(new \Baiy\Cadmin\Dispatch\Laravel()); // [可选] 注册内置的thinkphp调用类
+    $admin->registerDispatcher(new \Baiy\Cadmin\Dispatch\Laravel()); // [可选] 注册内置调度类
     // 其他配置省略 见上方[入口代码说明] .....
 
     // [可选] 设置请求日志记录回调函数
