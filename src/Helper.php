@@ -42,7 +42,7 @@ class Helper
     public static function createResponse(string $content, int $status = 200): ResponseInterface
     {
         return (new ResponseFactory())->createResponse()->withStatus($status)->withBody(
-            StreamFactory::createStream($content)
+            (new StreamFactory())->createStream($content)
         );
     }
 }
