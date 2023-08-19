@@ -10,13 +10,6 @@ class Context
 {
     private Container $container;
 
-    // 游客用户权限
-    const AUTH_GUEST_USER_ID = 1;
-    // 登录用户权限
-    const AUTH_LOGIN_USER_ID = 2;
-    // 超级管理员用户组
-    const USER_GROUP_ADMINISTRATOR_ID = 1;
-
     private ResponseInterface $response;
     // 监听sql执行数据
     private array $listenSql = [];
@@ -55,19 +48,32 @@ class Context
             } else {
                 $this->response = $this->response('success', '操作成功', $data);
             }
+
+            // 记录日志
+            $this->logRecord();
         } catch (Throwable $e) {
-            $this->response = $this->response('error', $e->getMessage(), $e->getTrace());
-        }
-        if ($this->token) {
-            // 延长 token 过期时间, 并添加到响应
-            $this->response = $this->response->withHeader(
-                'Cadmin-Token-Expire-Time',
-                $this->container->model->token()->updateToken($this->token)
+            $this->response = $this->response(
+                'error',
+                $e->getMessage(),
+                $this->container->admin->isDebug() ? $e->getTrace() : []
             );
         }
 
-        // 记录日志
-        $this->logRecord();
+        if ($this->token) {
+            // 延长 token 过期时间, 并添加到响应
+            $time = $this->container->model->token()->updateToken($this->token);
+
+            $this->response = $this->response->withHeader(
+                'Cadmin-Token-Expire-Timestamp',
+                $time
+            )->withHeader(
+                'Cadmin-Token-Expire-Time',
+                date('Y-m-d H:i:s', $time)
+            )->withHeader(
+                'Access-Control-Expose-Headers',
+                "Cadmin-Token-Expire-Timestamp,Cadmin-Token-Expire-Time"
+            );
+        }
 
         return $this->response;
     }
@@ -155,11 +161,13 @@ class Context
     private function checkAccess(): void
     {
         $authIds = $this->container->model->requestRelate()->authIds($this->request['id'] ?? "");
+
+        // 请求必须分配权限组(游客权限也不例外)
         if (empty($authIds)) {
             throw new Exception("请求未分配权限组");
         }
 
-        if (in_array(self::AUTH_GUEST_USER_ID, $authIds)) {
+        if (in_array(\Baiy\Cadmin\Model\Auth::AUTH_GUEST_USER_ID, $authIds)) {
             // 游客可访问
             return;
         }
@@ -172,7 +180,7 @@ class Context
             throw new Exception("用户已被禁用");
         }
 
-        if (in_array(self::AUTH_LOGIN_USER_ID, $authIds)) {
+        if (in_array(\Baiy\Cadmin\Model\Auth::AUTH_LOGIN_USER_ID, $authIds)) {
             // 登录可访问
             return;
         }
@@ -182,7 +190,7 @@ class Context
             throw new Exception("用户未分配用户组");
         }
 
-        if (in_array(self::USER_GROUP_ADMINISTRATOR_ID, $userGroupIds)) {
+        if (in_array(\Baiy\Cadmin\Model\UserGroup::USER_GROUP_ADMINISTRATOR_ID, $userGroupIds)) {
             // 超级管理员
             return;
         }

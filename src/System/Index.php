@@ -3,6 +3,7 @@
 namespace Baiy\Cadmin\System;
 
 use Exception;
+use Baiy\Cadmin\Helper;
 
 class Index extends Base
 {
@@ -40,22 +41,36 @@ class Index extends Base
         }
     }
 
-    public function load($adminUserId): array
+    public function load($adminUserId, $development = 0): array
     {
         return [
-            'user'      => $this->context->getUser(),
-            'allUser'   => array_map(
-                function ($user) {
-                    // 过滤密码
-                    unset($user['password']);
-                    return $user;
-                },
-                $this->model->user()->getAll()
+            'user'      => Helper::extractValues(
+                $this->context->getUser(),
+                ['id', 'username', 'last_login_ip', 'last_login_time', 'description']
             ),
-            'menu'      => $this->model->user()->getUserMenu($adminUserId),
-            'request'   => $this->model->user()->getUserRequest($adminUserId),
-            'userGroup' => $this->model->user()->getUserGroup($adminUserId),
-            'auth'      => $this->model->user()->getUserAuth($adminUserId),
+            'allUser'   => Helper::extractValues(
+                $this->model->user()->getAllEnable(),
+                ['id', 'username', 'last_login_ip', 'last_login_time', 'description']
+            ),
+            'menu'      => Helper::extractValues(
+                $this->model->user()->getUserMenu($adminUserId, $development),
+                ['create_time', 'update_time'],
+                true
+            ),
+            'request'   => Helper::extractValues(
+                $this->model->user()->getUserRequest($adminUserId),
+                ['name', 'action']
+            ),
+            'userGroup' => Helper::extractValues(
+                $this->model->user()->getUserGroup($adminUserId),
+                ['create_time', 'update_time'],
+                true
+            ),
+            'auth'      => Helper::extractValues(
+                $this->model->user()->getUserAuth($adminUserId),
+                ['create_time', 'update_time'],
+                true
+            ),
         ];
     }
 }

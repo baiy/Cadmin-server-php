@@ -16,9 +16,9 @@ class Base
     protected Container $container;
     protected Request $request;
 
-    public function __construct(Context $context)
+    public function __construct(Context $adminContext)
     {
-        $this->context   = $context;
+        $this->context   = $adminContext;
         $this->container = $this->context->getContainer();
         $this->db        = $this->container->db;
         $this->model     = $this->container->model;

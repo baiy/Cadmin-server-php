@@ -60,4 +60,9 @@ class Menu extends Base
         }
         $this->model->menu()->delete($id);
     }
+
+    public function group(): array
+    {
+        return $this->db->select($this->model->menuGroup()->table, "*", ['ORDER' => ['id' => 'ASC']]);
+    }
 }

@@ -38,6 +38,29 @@ class Helper
         return $clientIp ?: "";
     }
 
+    // 数组数据提取
+    public static function extractValues($array, $keys = [], $isFilter = false): array
+    {
+        if (empty($array) || !is_array($array)) {
+            return [];
+        }
+        if (!is_array(array_values($array)[0])) {
+            return array_filter(
+                $array,
+                fn($key) => $isFilter ? !in_array($key, $keys) : in_array($key, $keys),
+                ARRAY_FILTER_USE_KEY
+            );
+        }
+        return array_map(
+            fn($items) => array_filter(
+                $items,
+                fn($key) => $isFilter ? !in_array($key, $keys) : in_array($key, $keys),
+                ARRAY_FILTER_USE_KEY
+            ),
+            $array
+        );
+    }
+
     // 创建标准psr响应
     public static function createResponse(string $content, int $status = 200): ResponseInterface
     {

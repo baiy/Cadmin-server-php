@@ -20,6 +20,11 @@ abstract class Base
         $this->db        = $this->container->db;
         $this->model     = $this->container->model;
         $this->table     = $this->container->admin->getTablePrefix().Helper::parseTableName(static::class);
+        $this->init();
+    }
+
+    public function init():void
+    {
     }
 
     public function getByIds($ids): array

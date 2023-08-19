@@ -39,7 +39,9 @@ class Admin
      */
     private Password $password;
 
-    public function __construct(PDO $pdo, ServerRequestInterface $request)
+    private $debug = false;
+
+    public function __construct(PDO $pdo, ServerRequestInterface $request,)
     {
         // 注册系统默认调用器
         $this->registerDispatcher(new Dispatcher());
@@ -137,5 +139,17 @@ class Admin
     {
         $this->inputTokenName = $name;
         return $this;
+    }
+
+    // debug 开关
+    public function debug(): static
+    {
+        $this->debug = true;
+        return $this;
+    }
+
+    public function isDebug(): bool
+    {
+        return $this->debug;
     }
 }
