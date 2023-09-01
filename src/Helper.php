@@ -2,7 +2,9 @@
 
 namespace Baiy\Cadmin;
 
+use Laminas\Diactoros\ServerRequestFactory;
 use Laminas\Diactoros\StreamFactory;
+use PDO;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Laminas\Diactoros\ResponseFactory;
@@ -66,6 +68,25 @@ class Helper
     {
         return (new ResponseFactory())->createResponse()->withStatus($status)->withBody(
             (new StreamFactory())->createStream($content)
+        );
+    }
+
+    // 创建标准psr ServerRequest
+    public static function createServerRequest(): ServerRequestInterface
+    {
+        return ServerRequestFactory::fromGlobals();
+    }
+
+    // 生成pdo对象
+    public static function createPdo(string $dns, string $user, string $password): PDO
+    {
+        return new PDO(
+            $dns,
+            $user,
+            $password,
+            [
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_SILENT,
+            ]
         );
     }
 }
