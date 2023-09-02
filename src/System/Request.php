@@ -63,6 +63,6 @@ class Request extends Base
                 'name'        => $dispatcher->name(),
                 'description' => $dispatcher->description(),
             ];
-        }, $this->container->admin->allDispatcher()));
+        }, array_reverse($this->container->admin->allDispatcher())));
     }
 }
