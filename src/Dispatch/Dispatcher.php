@@ -66,7 +66,7 @@ class Dispatcher implements Dispatch
      * @param  array  $inject
      * @return array
      */
-    private function getParameters($parameters, $inject = []): array
+    protected function getParameters($parameters, $inject = []): array
     {
         $returnParameters = [];
         foreach ($parameters as $parameter) {
@@ -80,7 +80,7 @@ class Dispatcher implements Dispatch
      * @param  array  $inject
      * @return mixed
      */
-    private function handlerParameter(ReflectionParameter $parameter, $inject = []): mixed
+    protected function handlerParameter(ReflectionParameter $parameter, $inject = []): mixed
     {
         // 注入参数
         if (isset($inject[$parameter->getName()])) {
