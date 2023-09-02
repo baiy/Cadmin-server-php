@@ -56,7 +56,7 @@ class Dispatcher implements Dispatch
 
     public function name():string
     {
-        return "默认";
+        return "系统内置";
     }
 
     /**
